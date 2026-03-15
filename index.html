@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Duplicato di Bridge - Realtime</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#f0ede8; --surface:#faf8f5; --card:#fff; --border:#e2dcd4;
+    --blue:#2145a0; --blue-l:#3a63c8; --blue-bg:#e8edf8;
+    --sage:#8aab8e; --sage-bg:#eaf2eb;
+    --blush:#c4847a; --blush-l:#e8b8b2; --blush-bg:#fceeed;
+    --slate:#7a8fa6; --slate-bg:#eaf0f6;
+    --sand:#b89a6e; --sand-bg:#f8f2e8;
+    --text:#3a3530; --text-m:#7a7068; --text-l:#b0a89e;
+    --r:14px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);min-height:100vh;font-family:'Nunito',sans-serif;color:var(--text);
+    background-image:radial-gradient(circle at 15% 15%,rgba(33,69,160,.06) 0%,transparent 45%),
+    radial-gradient(circle at 85% 80%,rgba(196,132,122,.09) 0%,transparent 45%);}
+
+  .overlay{position:fixed;inset:0;background:rgba(240,237,232,.97);backdrop-filter:blur(4px);
+    z-index:100;display:flex;align-items:center;justify-content:center;padding:24px;}
+  .overlay.hidden{display:none;}
+  .hidden{display:none !important;}
+  .modal{background:var(--card);border:1px solid var(--border);border-radius:20px;
+    padding:32px 28px;max-width:440px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.08);}
+  .modal-suits{display:flex;gap:8px;margin-bottom:18px;}
+  .ms{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;}
+  .modal h2{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;color:var(--blue);margin-bottom:4px;}
+  .modal .sub{font-size:12px;color:var(--text-l);margin-bottom:22px;}
+
+  .field{margin-bottom:13px;}
+  .field label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;
+    letter-spacing:.1em;color:var(--blue);margin-bottom:4px;}
+  .field input{width:100%;background:var(--surface);border:1.5px solid var(--border);
+    border-radius:9px;padding:10px 13px;font-family:'Nunito',sans-serif;font-size:14px;
+    color:var(--text);transition:border-color .18s;-webkit-appearance:none;}
+  .field input:focus{outline:none;border-color:var(--blue);background:#fff;}
+  .field input::placeholder{color:var(--text-l);font-style:italic;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+  .btn{width:100%;padding:13px;border:none;border-radius:10px;font-family:'Nunito',sans-serif;
+    font-size:14px;font-weight:700;cursor:pointer;transition:all .18s;letter-spacing:.02em;margin-top:6px;}
+  .btn-blue{background:var(--blue);color:#fff;}
+  .btn-blue:hover:not(:disabled){background:var(--blue-l);transform:translateY(-1px);box-shadow:0 4px 20px rgba(33,69,160,.3);}
+  .btn-blue:disabled{opacity:.4;cursor:not-allowed;}
+  .btn-ghost{background:var(--surface);color:var(--text-m);border:1.5px solid var(--border);}
+  .btn-ghost:hover{background:var(--card);}
+  .btn-danger{background:var(--blush);color:#fff;}
+  .btn-danger:hover{background:#b07068;}
+
+  .share-box{background:var(--blue-bg);border:1.5px solid var(--blue);border-radius:12px;padding:14px;margin:14px 0 4px;}
+  .share-box p{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--blue);margin-bottom:7px;}
+  .share-row{display:flex;gap:7px;align-items:stretch;}
+  .share-url{flex:1;background:#fff;border:1px solid var(--border);border-radius:8px;
+    padding:8px 11px;font-size:12px;color:var(--blue);word-break:break-all;font-weight:600;line-height:1.4;}
+  .copy-btn{flex-shrink:0;padding:8px 13px;background:var(--blue);color:#fff;border:none;border-radius:8px;
+    font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .18s;white-space:nowrap;}
+  .copy-btn:hover{background:var(--blue-l);}
+  .copy-btn.ok{background:var(--sage);}
+
+  .spinner-lg{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--blue);
+    border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .spinner-sm{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.4);
+    border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:5px;}
+
+  header{background:var(--card);border-bottom:2px solid var(--blue-bg);padding:26px 24px 20px;text-align:center;}
+  .suits-row{display:flex;justify-content:center;gap:10px;margin-bottom:10px;}
+  .suit{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;}
+  h1{font-family:'Cormorant Garamond',serif;font-size:clamp(24px,6vw,38px);font-weight:700;color:var(--blue);}
+  h1 small{display:block;font-weight:400;font-style:italic;font-size:.52em;color:var(--text-m);
+    letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px;}
+  .event-meta{margin-top:10px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
+  .meta-pill{display:inline-flex;align-items:center;gap:5px;background:var(--blue-bg);
+    color:var(--blue);font-size:12px;font-weight:700;padding:4px 12px;border-radius:99px;}
+
+  .container { max-width: 680px; margin: 0 auto; padding: 22px 16px 10px; }
+  .sync-pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--text-l);
+    background:var(--surface);border:1px solid var(--border);border-radius:99px;padding:3px 10px;margin-bottom:14px;}
+  .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--text-l);}
+  .sync-dot.live{background:var(--sage);animation:pulse 2s infinite;}
+  .sync-dot.err{background:var(--blush);}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+  .status-bar{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+    padding:16px 20px;margin-bottom:14px;}
+  .status-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;}
+  .status-label{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--blue);font-weight:700;}
+  .status-chips{display:flex;gap:8px;}
+  .chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;
+    padding:4px 12px;border-radius:99px;}
+  .chip-blue{background:var(--blue-bg);color:var(--blue);}
+  .chip-blush{background:var(--blush-bg);color:var(--blush);}
+  .prog-track{height:7px;background:var(--border);border-radius:99px;overflow:hidden;}
+  .prog-fill{height:100%;background:linear-gradient(90deg,var(--blue-bg),var(--blue));
+    border-radius:99px;transition:width .5s cubic-bezier(.4,0,.2,1);width:0%;}
+
+  /* Badge di Stato */
+  .status-badge {
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #fff;
+    display: inline-block;
+  }
+  .badge-open { background-color: var(--sage); }
+  .badge-closed { background-color: var(--blush); }
+
+  .lists-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+  @media(max-width:480px){.lists-grid{grid-template-columns:1fr;}}
+  .list-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px 14px;}
+  .lch{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+  .list-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;}
+  .lch h3{font-size:12px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.08em;flex:1;}
+  .badge{background:var(--blue-bg);color:var(--blue);font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;}
+  .badge.s{background:var(--blush-bg);color:var(--blush);}
+
+  .reg-item{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:7px;
+    margin-bottom:4px;background:var(--surface);animation:popIn .22s ease;position:relative;}
+  .reg-item.mine{background:var(--blue-bg);border:1px solid rgba(33,69,160,.15);}
+  @keyframes popIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+  .reg-num{font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:600;color:var(--blue);min-width:16px;}
+  
+  /* Coppia su riga singola */
+  .reg-name {
+    flex:1;
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .reg-name small {
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .reg-name small::before {
+    content: "& ";
+    color: var(--text-l);
+  }
+
+  .del-btn{background:none;border:none;cursor:pointer;font-size:14px;padding:2px 4px;
+    line-height:1;transition:all .15s;border-radius:5px;flex-shrink:0;}
+  .del-btn.admin-del{color:var(--text-l);}
+  .del-btn.admin-del:hover{color:var(--blush);}
+  .del-btn.mine-del{color:var(--blush);background:var(--blush-bg);font-size:11px;
+    font-family:'Nunito',sans-serif;font-weight:700;padding:2px 7px;}
+  .del-btn.mine-del:hover{background:var(--blush);color:#fff;}
+
+  .form-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:22px 20px;margin-bottom:14px;}
+  .form-card h2{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--blue);margin-bottom:16px;}
+  .type-toggle{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px;}
+  .tog{padding:11px 8px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);
+    color:var(--text-m);font-family:'Nunito',sans-serif;font-size:13px;font-weight:600;cursor:pointer;
+    transition:all .18s;text-align:center;}
+  .tog .icon{font-size:18px;display:block;margin-bottom:3px;}
+  .tog.active.coppia{border-color:var(--blue);background:var(--blue-bg);color:var(--blue);}
+  .tog.active.singolo{border-color:var(--blush);background:var(--blush-bg);color:var(--blush);}
+  .ig{margin-bottom:11px;}
+  .ig label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;
+    letter-spacing:.09em;color:var(--blue);margin-bottom:4px;}
+  .ig input{width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:9px;
+    padding:10px 13px;font-family:'Nunito',sans-serif;font-size:14px;color:var(--text);
+    transition:border-color .18s;-webkit-appearance:none;}
+  .ig input:focus{outline:none;border-color:var(--blue);background:#fff;}
+  .ig input::placeholder{color:var(--text-l);font-style:italic;}
+  .submit-btn{width:100%;padding:13px;background:var(--blue);border:none;border-radius:10px;
+    color:#fff;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;cursor:pointer;
+    transition:all .18s;letter-spacing:.02em;margin-top:3px;}
+  .submit-btn:hover:not(:disabled){background:var(--blue-l);transform:translateY(-1px);box-shadow:0 4px 20px rgba(33,69,160,.25);}
+  .submit-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+
+  .info-banner{border-radius:var(--r);padding:14px 16px;margin-bottom:14px;font-size:13px;font-weight:600;line-height:1.5;}
+  .info-banner.blue{background:var(--blue-bg);border:1.5px solid var(--blue);color:var(--blue);}
+  .info-banner.blush{background:var(--blush-bg);border:1.5px solid var(--blush);color:var(--blush);}
+
+  .admin-bar{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+    padding:16px 18px;margin-bottom:14px;}
+  .admin-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
+    color:var(--blue);margin-bottom:10px;}
+  .admin-share-box{background:var(--blue-bg);border:1px solid var(--blue);border-radius:99px;
+    padding:10px 12px;margin-bottom:10px;}
+  .admin-share-row{display:flex;gap:6px;align-items:stretch;}
+  .admin-url{flex:1;background:transparent;border:none;padding:7px 10px;font-size:11px;color:var(--blue);word-break:break-all;font-weight:600;line-height:1.4;}
+  .admin-btns{display:flex;flex-wrap:wrap;gap:7px;}
+  .ab{padding:7px 13px;border-radius:8px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;
+    cursor:pointer;transition:all .15s;border:1.5px solid var(--border);background:var(--surface);color:var(--text-m);}
+  .ab:hover{background:var(--card);border-color:var(--text-l);}
+  .ab.red{color:var(--blush);}
+  .ab.red:hover{background:var(--blush-bg);border-color:var(--blush-l);}
+  .export-box{display:none;margin-top:11px;background:var(--surface);border:1px solid var(--border);
+    border-radius:10px;padding:13px;font-size:13px;color:var(--text-m);white-space:pre-wrap;line-height:1.9;}
+  .export-box.show{display:block;}
+
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+    background:var(--text);color:#fff;padding:11px 22px;border-radius:99px;font-size:13px;
+    font-weight:600;box-shadow:0 6px 24px rgba(0,0,0,.15);
+    transition:transform .3s cubic-bezier(.4,0,.2,1);z-index:300;white-space:nowrap;}
+  .toast.show{transform:translateX(-50%) translateY(0);}
+  .toast.ok{background:var(--sage);}
+  .toast.err{background:var(--blush);}
+  footer p { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 14px !important; margin: 0; }
+</style>
+</head>
+<body>
+
+<div class="overlay" id="loadingOverlay">
+  <div class="modal" style="text-align:center;padding:48px 32px">
+    <div class="spinner-lg"></div>
+    <p style="color:var(--text-m);font-size:14px">Connessione a Firebase…</p>
+  </div>
+</div>
+
+<div class="overlay hidden" id="setupOverlay">
+  <div class="modal">
+    <div class="modal-suits">
+      <div class="ms" style="background:var(--slate-bg);color:var(--slate)">♠</div>
+      <div class="ms" style="background:var(--blush-bg);color:var(--blush)">♥</div>
+      <div class="ms" style="background:var(--sand-bg);color:var(--sand)">♦</div>
+      <div class="ms" style="background:var(--sage-bg);color:var(--sage)">♣</div>
+    </div>
+    <h2>Nuovo torneo</h2>
+    <p class="sub">Configura i dettagli del prossimo duplicato</p>
+    <div class="field">
+      <label>Nome evento</label>
+      <input type="text" id="sTitle" value="Duplicato di Bridge" oninput="cs()">
+    </div>
+    <div class="row2">
+      <div class="field"><label>Data</label><input type="date" id="sDate" oninput="cs()"></div>
+      <div class="field"><label>Orario</label><input type="time" id="sTime" value="21:00"></div>
+    </div>
+    <div class="field">
+      <label>Luogo</label>
+      <input type="text" id="sPlace" placeholder="es. Circolo Bridge, Via Roma 12">
+    </div>
+    <div class="field">
+      <label>Numero coppie (max)</label>
+      <input type="number" id="sMaxCoppie" value="8" min="1" max="24">
+    </div>
+    <button class="btn btn-blue" id="setupBtn" onclick="launch()" disabled>Crea torneo →</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="shareOverlay">
+  <div class="modal" style="text-align:center">
+    <div style="font-size:40px;margin-bottom:10px">🎉</div>
+    <h2 style="margin-bottom:4px">Torneo creato!</h2>
+    <p class="sub">Manda questo link su WhatsApp</p>
+    <div class="share-box">
+      <p>📤 Link partecipanti</p>
+      <div class="share-row">
+        <div class="share-url" id="shareUrlTxt">—</div>
+        <button class="copy-btn" id="copyBtn1" onclick="doCopy('copyBtn1')">📋 Copia</button>
+      </div>
+    </div>
+    <button class="btn btn-blue" style="margin-top:6px" onclick="hide('shareOverlay')">Vai alla lista →</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="resetOverlay">
+  <div class="modal" style="text-align:center">
+    <div style="font-size:34px;margin-bottom:10px">⚠️</div>
+    <h2 style="font-size:20px;margin-bottom:4px">Cancellare le iscrizioni?</h2>
+    <p class="sub">Non è reversibile.</p>
+    <button class="btn btn-danger" onclick="doReset()">Sì, azzera</button>
+    <button class="btn btn-ghost" style="margin-top:6px" onclick="hide('resetOverlay')">Annulla</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="newOverlay">
+  <div class="modal" style="text-align:center">
+    <div style="font-size:34px;margin-bottom:10px">🃏</div>
+    <h2 style="font-size:20px;margin-bottom:4px">Nuovo torneo?</h2>
+    <p class="sub">Il torneo attuale verrà archiviato e ne verrà creato uno nuovo.</p>
+    <button class="btn btn-blue" onclick="nuovoTorneo()">Configura nuovo torneo</button>
+    <button class="btn btn-ghost" style="margin-top:6px" onclick="hide('newOverlay')">Annulla</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="selfDelOverlay">
+  <div class="modal" style="text-align:center">
+    <div style="font-size:34px;margin-bottom:10px">🗑️</div>
+    <h2 style="font-size:20px;margin-bottom:4px">Cancellare la tua iscrizione?</h2>
+    <p class="sub" id="selfDelMsg">Questa azione non è reversibile.</p>
+    <button class="btn btn-danger" onclick="confirmSelfDel()">Sì, cancellami</button>
+    <button class="btn btn-ghost" style="margin-top:6px" onclick="hide('selfDelOverlay')">Annulla</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="deniedOverlay">
+  <div class="modal" style="text-align:center">
+    <div style="font-size:48px;margin-bottom:12px">🔒</div>
+    <h2 style="margin-bottom:6px">Accesso non autorizzato</h2>
+    <p class="sub">Usa il link ricevuto dall'organizzatore.</p>
+  </div>
+</div>
+
+<header>
+  <div class="suits-row">
+    <div class="suit" style="background:var(--slate-bg);color:var(--slate)">♠</div>
+    <div class="suit" style="background:var(--blush-bg);color:var(--blush)">♥</div>
+    <div class="suit" style="background:var(--sand-bg);color:var(--sand)">♦</div>
+    <div class="suit" style="background:var(--sage-bg);color:var(--sage)">♣</div>
+  </div>
+  <h1><small>Torneo</small><span id="hTitle">Duplicato di Bridge</span></h1>
+  <div class="event-meta">
+    <span class="meta-pill" id="mDate" style="display:none">📅 <span id="mDateTxt"></span></span>
+    <span class="meta-pill" id="mTime" style="display:none">🕐 <span id="mTimeTxt"></span></span>
+    <span class="meta-pill" id="mPlace" style="display:none">📍 <span id="mPlaceTxt"></span></span>
+  </div>
+</header>
+
+<div class="container">
+  <div style="text-align:center">
+    <div class="sync-pill">
+      <div class="sync-dot" id="syncDot"></div>
+      <span id="syncLbl">Sincronizzazione...</span>
+    </div>
+  </div>
+
+  <div class="admin-bar" id="adminBar" style="display:none">
+    <div class="admin-title">⚙️ Pannello organizzatore</div>
+    <div class="admin-share-box">
+      <p>📤 Link per i partecipanti</p>
+      <div class="admin-share-row">
+        <div class="admin-url" id="adminUrlTxt">—</div>
+        <button class="copy-btn" id="copyBtn2" onclick="doCopy('copyBtn2')" style="font-size:11px;padding:7px 11px">📋 Copia</button>
+      </div>
+    </div>
+    <div class="admin-btns">
+      <button class="ab" onclick="toggleExport()">📋 Esporta lista</button>
+      <button class="ab" onclick="show('newOverlay')">🔄 Nuovo torneo</button>
+      <button class="ab red" onclick="show('resetOverlay')">↺ Reset iscrizioni</button>
+    </div>
+    <div class="export-box" id="exportBox"></div>
+  </div>
+
+  <div class="status-bar">
+    <div class="status-row">
+      <span class="status-label">Stato iscrizioni</span>
+      <div class="status-chips">
+        <span class="chip chip-blue">👫 <span id="cCount">0</span> / <span id="cMax">8</span></span>
+        <span class="chip chip-blush">🙋 <span id="sCount">0</span> singoli</span>
+      </div>
+    </div>
+    <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
+    <div style="margin-top:10px;" id="statusNote"></div>
+  </div>
+
+  <div class="lists-grid">
+    <div class="list-card">
+      <div class="lch">
+        <div class="list-icon" style="background:var(--blue-bg)">👫</div>
+        <h3>Coppie</h3>
+        <span class="badge" id="cBadge">0</span>
+      </div>
+      <div id="cList"></div>
+    </div>
+    <div class="list-card">
+      <div class="lch">
+        <div class="list-icon" style="background:var(--blush-bg)">🙋</div>
+        <h3>Singoli</h3>
+        <span class="badge s" id="sBadge">0</span>
+      </div>
+      <div id="sList"></div>
+    </div>
+  </div>
+
+  <div class="info-banner blue hidden" id="fullBanner">
+    🃏 Le coppie sono complete — ci vediamo al tavolo!
+  </div>
+
+  <div class="info-banner blush hidden" id="alreadyBanner">
+    ✓ Sei già iscritto/a — la tua iscrizione è evidenziata in blu nella lista.
+  </div>
+
+  <div class="form-card" id="formCard">
+    <h2>Iscriviti al torneo</h2>
+    <div class="type-toggle">
+      <button class="tog active coppia" id="btnC" onclick="setType('coppia')"><span class="icon">👫</span>Coppia</button>
+      <button class="tog singolo" id="btnS" onclick="setType('singolo')"><span class="icon">🙋</span>Singolo/a</button>
+    </div>
+    <div class="ig">
+      <label id="lbl1">Nome giocatore 1</label>
+      <input type="text" id="n1" placeholder="es. Mario Rossi" autocomplete="off" oninput="cf()">
+    </div>
+    <div class="ig" id="g2">
+      <label>Nome giocatore 2</label>
+      <input type="text" id="n2" placeholder="es. Giulia Bianchi" autocomplete="off" oninput="cf()">
+    </div>
+    <button class="submit-btn" id="subBtn" onclick="register()" disabled>Conferma iscrizione</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<footer style="text-align:center; padding:20px 0; margin-top:0px; border-top:1px solid var(--border);">
+  <p style="font-size:12px; color:var(--text-l); font-weight:600; letter-spacing:0.05em;">
+    App creata da <span style="color:var(--blue)">@anacrob</span>
+  </p>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCH-0NeAPVShAcqBWLohT0q9JJOBYitW5k",
+  authDomain: "duplicato-anacrob.firebaseapp.com",
+  databaseURL: "https://duplicato-anacrob-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "duplicato-anacrob",
+  storageBucket: "duplicato-anacrob.firebasestorage.app",
+  messagingSenderId: "679147717441",
+  appId: "1:679147717441:web:1d0a8a938a14d0f50c57c0"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+const PW_ADMIN = 'GK020160';
+const PW_USER = 'anacrob';
+const MYCODE_KEY = 'bridge-mycode-fb-v1';
+const LKEY = 'bridge-bin-fb-v1';
+
+let MAX_COPPIE=8, BIN_ID=null, regs=[], curType='coppia';
+let isAdmin=false, myCode=null, userShareUrl='';
+let pendingSelfDelIdx = null;
+
+function getMyCode() {
+  let c = localStorage.getItem(MYCODE_KEY);
+  if (!c) { c = Math.random().toString(36).slice(2,10); localStorage.setItem(MYCODE_KEY,c); }
+  return c;
+}
+
+(async () => {
+  const p = new URLSearchParams(location.search);
+  const adminPw = p.get('admin');
+  const userPw = p.get('user');
+  const binParam = p.get('bin');
+
+  myCode = getMyCode();
+
+  if (adminPw === PW_ADMIN) {
+    isAdmin = true;
+    document.getElementById('adminBar').style.display = 'block';
+    BIN_ID = binParam || localStorage.getItem(LKEY);
+    if (!BIN_ID) { hide('loadingOverlay'); prefillDate(); show('setupOverlay'); return; }
+  } else if (userPw === PW_USER) {
+    if (!binParam) { hide('loadingOverlay'); show('deniedOverlay'); return; }
+    BIN_ID = binParam;
+  } else { hide('loadingOverlay'); show('deniedOverlay'); return; }
+
+  buildUserUrl();
+  if (isAdmin) updateAdminUrl();
+  startSync();
+  hide('loadingOverlay');
+})();
+
+function startSync() {
+  db.ref('tornei/' + BIN_ID).on('value', (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      regs = data.registrations || [];
+      if (data.meta) {
+        MAX_COPPIE = data.meta.maxCoppie || 8;
+        applyMeta(data.meta);
+      }
+      render();
+      setSS('live', 'Sincronizzato Realtime');
+    } else { setSS('err', 'Torneo non trovato'); }
+  }, (err) => { setSS('err', 'Errore connessione'); });
+}
+
+function buildUserUrl() {
+  const base = location.origin + location.pathname.replace(/\/+$/,'');
+  userShareUrl = `${base}?user=${PW_USER}&bin=${BIN_ID}`;
+}
+function updateAdminUrl() { document.getElementById('adminUrlTxt').textContent = userShareUrl; }
+
+async function launch() {
+  const btn = document.getElementById('setupBtn');
+  btn.disabled=true; btn.innerHTML='<span class="spinner-sm"></span>Creazione…';
+  MAX_COPPIE = parseInt(document.getElementById('sMaxCoppie').value)||8;
+  BIN_ID = 'T' + Date.now();
+  const initialData = {
+    registrations: [],
+    meta: {
+      title: document.getElementById('sTitle').value.trim(),
+      date: document.getElementById('sDate').value,
+      time: document.getElementById('sTime').value,
+      place: document.getElementById('sPlace').value.trim(),
+      maxCoppie: MAX_COPPIE
+    }
+  };
+  try {
+    await db.ref('tornei/' + BIN_ID).set(initialData);
+    localStorage.setItem(LKEY, BIN_ID);
+    buildUserUrl(); updateAdminUrl();
+    hide('setupOverlay');
+    document.getElementById('shareUrlTxt').textContent = userShareUrl;
+    show('shareOverlay');
+    startSync();
+  } catch(e) { toast('Errore: ' + e.message, 'err'); btn.disabled=false; btn.textContent='Crea torneo →'; }
+}
+
+async function register() {
+  const n1 = document.getElementById('n1').value.trim();
+  const n2 = document.getElementById('n2').value.trim();
+  if (!isAdmin && regs.filter(r=>r.type==='coppia').length >= MAX_COPPIE) { toast('Torneo completo!', 'err'); return; }
+  const btn = document.getElementById('subBtn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner-sm"></span>Invio…';
+  const newReg = {
+    type: curType,
+    names: curType === 'coppia' ? [formatName(n1), formatName(n2)] : [formatName(n1)],
+    code: isAdmin ? 'ADMIN' : myCode,
+    ts: Date.now()
+  };
+  try {
+    const dbRef = db.ref('tornei/' + BIN_ID + '/registrations');
+    const snapshot = await dbRef.get();
+    let currentRegs = snapshot.val() || [];
+    currentRegs.push(newReg);
+    await dbRef.set(currentRegs);
+    document.getElementById('n1').value = ''; document.getElementById('n2').value = '';
+    toast('✓ Iscrizione salvata!', 'ok');
+    if(isAdmin) cf();
+  } catch(e) { toast('Errore: ' + e.message, 'err'); btn.disabled = false; btn.innerHTML = 'Riprova'; }
+}
+
+async function confirmSelfDel() {
+  hide('selfDelOverlay');
+  if (pendingSelfDelIdx === null) return;
+  const newRegs = [...regs];
+  newRegs.splice(pendingSelfDelIdx, 1);
+  try {
+    await db.ref('tornei/' + BIN_ID + '/registrations').set(newRegs);
+    pendingSelfDelIdx = null;
+    toast('Iscrizione rimossa', '');
+  } catch(e) { toast('Errore', 'err'); }
+}
+
+async function adminDel(idx) {
+  if(!confirm("Vuoi davvero eliminare questa iscrizione?")) return;
+  const newRegs = [...regs];
+  newRegs.splice(idx, 1);
+  try {
+    await db.ref('tornei/' + BIN_ID + '/registrations').set(newRegs);
+    toast('Eliminato con successo', 'ok');
+  } catch(e) { toast('Errore nella cancellazione', 'err'); }
+}
+
+async function doReset() {
+  hide('resetOverlay');
+  try {
+    await db.ref('tornei/' + BIN_ID + '/registrations').set([]);
+    toast('Lista azzerata', '');
+  } catch(e) { toast('Errore', 'err'); }
+}
+
+function nuovoTorneo() {
+  hide('newOverlay');
+  localStorage.removeItem(LKEY);
+  location.href = location.origin + location.pathname + '?admin=' + PW_ADMIN;
+}
+
+function render() {
+  const cp = regs.filter(r => r.type === 'coppia');
+  const sg = regs.filter(r => r.type === 'singolo');
+  const full = cp.length >= MAX_COPPIE;
+  const myReg = regs.find(r => r.code === myCode);
+
+  document.getElementById('cCount').textContent = cp.length;
+  document.getElementById('sCount').textContent = sg.length;
+  document.getElementById('cMax').textContent = MAX_COPPIE;
+  document.getElementById('cBadge').textContent = cp.length;
+  document.getElementById('sBadge').textContent = sg.length;
+  document.getElementById('progFill').style.width = Math.min(100, (cp.length / MAX_COPPIE) * 100) + '%';
+
+  const noteContainer = document.getElementById('statusNote');
+  if (full) {
+    noteContainer.innerHTML = '<span class="status-badge badge-closed">Chiuse</span>';
+  } else {
+    noteContainer.innerHTML = '<span class="status-badge badge-open">Aperte</span>';
+  }
+
+  document.getElementById('fullBanner').classList.toggle('hidden', !full);
+  document.getElementById('alreadyBanner').classList.toggle('hidden', !myReg || isAdmin);
+  document.getElementById('formCard').style.display = (full && !myReg) ? 'none' : 'block';
+
+  const cl = document.getElementById('cList'); cl.innerHTML = '';
+  cp.forEach((r, i) => {
+    const origIdx = regs.indexOf(r);
+    const isMine = !isAdmin && r.code === myCode;
+    const d = document.createElement('div');
+    d.className = 'reg-item' + (isMine ? ' mine' : '');
+    let delBtn = isAdmin ? `<button class="del-btn admin-del" onclick="adminDel(${origIdx})">×</button>` : (isMine ? `<button class="del-btn mine-del" onclick="askSelfDel(${origIdx})">Cancella</button>` : '');
+    d.innerHTML = `<span class="reg-num">${i + 1}</span><span class="reg-name">${esc(r.names[0])} <small>${esc(r.names[1])}</small></span>${delBtn}`;
+    cl.appendChild(d);
+  });
+
+  const sl = document.getElementById('sList'); sl.innerHTML = '';
+  sg.forEach((r, i) => {
+    const origIdx = regs.indexOf(r);
+    const isMine = !isAdmin && r.code === myCode;
+    const d = document.createElement('div');
+    d.className = 'reg-item' + (isMine ? ' mine' : '');
+    let delBtn = isAdmin ? `<button class="del-btn admin-del" onclick="adminDel(${origIdx})">×</button>` : (isMine ? `<button class="del-btn mine-del" onclick="askSelfDel(${origIdx})">Cancella</button>` : '');
+    d.innerHTML = `<span class="reg-num">${i + 1}</span><span class="reg-name">${esc(r.names[0])}</span>${delBtn}`;
+    sl.appendChild(d);
+  });
+  cf();
+}
+
+function prefillDate() {
+  const d = new Date();
+  document.getElementById('sDate').value = d.toISOString().split('T')[0];
+  cs();
+}
+function cs() { document.getElementById('setupBtn').disabled = !document.getElementById('sTitle').value || !document.getElementById('sDate').value; }
+function setType(t) {
+  curType=t;
+  document.getElementById('btnC').className='tog coppia'+(t==='coppia'?' active':'');
+  document.getElementById('btnS').className='tog singolo'+(t==='singolo'?' active':'');
+  document.getElementById('g2').style.display=t==='coppia'?'block':'none';
+  cf();
+}
+function cf() {
+  const n1 = document.getElementById('n1').value.trim();
+  const n2 = document.getElementById('n2').value.trim();
+  const already = regs.find(r => r.code === myCode);
+  if (isAdmin) {
+    document.getElementById('subBtn').disabled = !n1 || (curType === 'coppia' && !n2);
+    document.getElementById('subBtn').innerHTML = 'Aggiungi (come Admin)';
+    return;
+  }
+  const bloccato = !n1 || (curType === 'coppia' && !n2) || already;
+  document.getElementById('subBtn').disabled = bloccato;
+  document.getElementById('subBtn').innerHTML = already ? 'Sei già iscritto' : 'Conferma iscrizione';
+}
+function askSelfDel(idx) { pendingSelfDelIdx=idx; show('selfDelOverlay'); }
+function applyMeta(m) {
+  if (m.title) { document.getElementById('hTitle').textContent=m.title; document.title=m.title; }
+  if (m.date) {
+    const [y, mo, d] = m.date.split('-');
+    const dataEstesa = new Date(+y, +mo - 1, +d).toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
+    document.getElementById('mDateTxt').textContent = dataEstesa;
+    document.getElementById('mDate').style.display = 'inline-flex';
+    document.getElementById('mDateTxt').dataset.compatta = `${d}/${mo}/${y.slice(-2)}`;
+  }
+  if (m.time) { document.getElementById('mTimeTxt').textContent = m.time; document.getElementById('mTime').style.display = 'inline-flex'; }
+  if (m.place) { document.getElementById('mPlaceTxt').textContent = m.place; document.getElementById('mPlace').style.display = 'inline-flex'; }
+}
+function doCopy(id) { navigator.clipboard.writeText(userShareUrl); toast('Link copiato!', 'ok'); }
+function toggleExport() {
+  const b = document.getElementById('exportBox');
+  b.classList.toggle('show');
+  if (b.classList.contains('show')) {
+    const cp = regs.filter(r => r.type === 'coppia');
+    const sg = regs.filter(r => r.type === 'singolo');
+    const titolo = document.getElementById('hTitle').textContent;
+    const dataIT = document.getElementById('mDateTxt').dataset.compatta || document.getElementById('mDateTxt').textContent;
+    const ora = document.getElementById('mTimeTxt').textContent;
+    const luogo = document.getElementById('mPlaceTxt').textContent;
+    let t = `🃏 *${titolo.toUpperCase()}*\n`;
+    t += `📅 Data: ${dataIT} - ore ${ora}\n`;
+    t += `📍 Luogo: ${luogo}\n`;
+    t += `─`.repeat(15) + `\n\n`;
+    t += `*👫 COPPIE:*\n`;
+    if (cp.length) { cp.forEach((r, i) => t += `  ${i + 1}. ${r.names[0]} & ${r.names[1]}\n`); }
+    else { t += `  (nessuna)\n`; }
+    if (sg.length) {
+      t += `\n*🙋 SINGOLI:*\n`;
+      sg.forEach((r, i) => t += `  ${i + 1}. ${r.names[0]}\n`);
+    }
+    t += `\n` + `─`.repeat(15) + `\n`;
+    t += `Totale: ${cp.length} coppie, ${sg.length} singoli.`;
+    b.innerHTML = `<pre style="white-space:pre-wrap; font-family:inherit;">${t}</pre>
+      <button class="copy-btn" onclick="copyToClipboard(\`${t.replace(/`/g, "\\`")}\`)" style="width:100%; margin-top:10px; padding:10px;">
+        📋 Copia lista per WhatsApp
+      </button>`;
+  }
+}
+
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function show(id){document.getElementById(id).classList.remove('hidden');}
+function hide(id){document.getElementById(id).classList.add('hidden');}
+function setSS(s,l){ document.getElementById('syncDot').className='sync-dot '+s; document.getElementById('syncLbl').textContent=l; }
+function toast(m,ty){ const t=document.getElementById('toast'); t.textContent=m; t.className='toast show '+ty; setTimeout(()=>t.className='toast',3000); }
+function formatName(str) { return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '); }
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => { toast('Lista copiata! Incolla su WhatsApp', 'ok'); })
+  .catch(() => {
+    const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    toast('Lista copiata!', 'ok');
+  });
+}
+setType('coppia');
+</script>
+</body>
+</html>
