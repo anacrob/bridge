@@ -10,22 +10,21 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
         body { background: var(--bg); color: #1c1e21; padding: 15px; }
         .container { max-width: 500px; margin: 0 auto; }
-        .header { background: var(--primary); color: white; padding: 25px; border-radius: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); margin-bottom: 20px; }
-        .header h1 { font-size: 22px; letter-spacing: 1px; margin-bottom: 5px; }
+        .header { background: var(--primary); color: white; padding: 25px; border-radius: 20px; text-align: center; margin-bottom: 20px; }
+        .header h1 { font-size: 22px; margin-bottom: 5px; }
         .header p { font-size: 14px; color: var(--accent); font-weight: 600; }
         .admin-panel { background: #2c3e50; color: white; padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 2px solid var(--accent); }
-        .admin-title { font-size: 12px; font-weight: 800; color: var(--accent); margin-bottom: 10px; display: flex; justify-content: space-between; }
         input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; margin-bottom: 10px; font-size: 16px; }
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 15px; margin-bottom: 8px; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 15px; margin-bottom: 8px; }
         .btn-main { background: var(--primary); color: white; }
         .btn-wa { background: #25d366; color: white; }
-        .btn-reset { background: var(--red); color: white; font-size: 11px; padding: 8px; margin-top: 10px; }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .btn-reset { background: var(--red); color: white; font-size: 11px; margin-top: 10px; }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .player-row { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
         .player-num { width: 35px; font-weight: 800; color: var(--accent); }
         .player-name { flex: 1; font-weight: 600; }
         .del-btn { color: #ccc; border: none; background: none; font-size: 22px; cursor: pointer; }
-        .hidden { display: none; }
+        .hidden { display: none !important; }
         #loadingOverlay { position: fixed; inset: 0; background: white; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 800; }
     </style>
 </head>
@@ -34,43 +33,39 @@
 <div id="loadingOverlay">CARICAMENTO IN CORSO...</div>
 
 <div class="container">
-    <div id="mainContent" class="hidden">
-        <div class="header">
-            <h1 id="eventTitle">TORNEO BRIDGE</h1>
-            <p id="eventDate">Seleziona o crea un torneo</p>
-        </div>
+    <div class="header">
+        <h1 id="eventTitle">TORNEO BRIDGE</h1>
+        <p id="eventDate">Caricamento dati...</p>
+    </div>
 
-        <div id="adminArea" class="admin-panel hidden">
-            <div class="admin-title"><span>⚙️ GESTIONE ADMIN:</span> <span id="adminNameDisplay">---</span></div>
-            <input type="text" id="newTitle" placeholder="Titolo (es: Torneo del Lunedì)">
-            <input type="text" id="newDate" placeholder="Data/Ora (es: 20 Marzo ore 21:00)">
-            <input type="number" id="newMax" placeholder="Max coppie (es: 16)">
-            <button class="btn btn-main" onclick="createNewTorneo()">➕ CREA NUOVO TORNEO</button>
-            <div id="activeControls" class="hidden">
-                <hr style="margin: 15px 0; opacity: 0.2;">
-                <button class="btn btn-wa" onclick="shareWA()">🟢 INVITA SU WHATSAPP</button>
-                <button class="btn btn-reset" onclick="resetCurrentTorneo()">⚠️ AZZERA ISCRITTI</button>
-            </div>
+    <div id="adminArea" class="admin-panel hidden">
+        <div style="font-size: 12px; color: var(--accent); margin-bottom: 10px; font-weight: 800;">⚙️ AREA AMMINISTRATORE</div>
+        <input type="text" id="newTitle" placeholder="Titolo Torneo">
+        <input type="text" id="newDate" placeholder="Data (es: 20 Marzo ore 21)">
+        <input type="number" id="newMax" placeholder="Max Coppie">
+        <button class="btn btn-main" onclick="createNewTorneo()">➕ CREA NUOVO TORNEO</button>
+        <div id="activeControls" class="hidden">
+            <hr style="margin: 15px 0; opacity: 0.2;">
+            <button class="btn btn-wa" onclick="shareWA()">🟢 INVITA SU WHATSAPP</button>
+            <button class="btn btn-reset" onclick="resetCurrentTorneo()">🗑️ RESET ISCRITTI</button>
         </div>
+    </div>
 
-        <div class="card" id="regForm">
-            <h3 style="margin-bottom: 10px; font-size: 14px; color: #666;">ISCRIZIONE COPPIA</h3>
-            <input type="text" id="playerName" placeholder="Nomi della Coppia">
-            <button class="btn btn-main" onclick="addPair()">CONFERMA ISCRIZIONE</button>
-        </div>
+    <div class="card" id="regForm">
+        <input type="text" id="playerName" placeholder="Nome della Coppia">
+        <button class="btn btn-main" onclick="addPair()">CONFERMA ISCRIZIONE</button>
+    </div>
 
-        <div class="card" style="margin-top: 20px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3>LISTA ISCRITTI</h3>
-                <span id="counter" style="font-weight: 800; color: var(--primary);">0/0</span>
-            </div>
-            <div id="playerList"></div>
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 style="font-size: 16px;">ISCRITTI</h3>
+            <span id="counter" style="font-weight: 800; color: var(--primary);">0/0</span>
         </div>
+        <div id="playerList"></div>
     </div>
 </div>
 
 <script>
-// --- CONFIGURAZIONE ---
 const JBASE = 'https://api.jsonbin.io/v3/b';
 const MASTER_KEY = '$2a$10$1qayBZ95jStLXaEK5ql6pOfEsL2lCZI9Zo6tu7.u0kko0C.DNEv16';
 const ACCESS_KEY = '$2a$10$meqPLCGo48xs4Me.qNnIUefaCedxyQ0Bgpi7OcAcBqG.aNPILz6lC';
@@ -79,7 +74,7 @@ const PW_USER = 'anacrob';
 
 let isAdmin = false;
 let currentBin = '';
-let torneoData = { meta: { title: "Nessun Torneo", date: "-", max: 0 }, players: [] };
+let torneoData = { meta: { title: "Nessun Torneo", date: "-", max: 16 }, players: [] };
 
 const params = new URLSearchParams(window.location.search);
 const adminPw = params.get('admin');
@@ -87,25 +82,24 @@ const userPw = params.get('user');
 const binParam = params.get('bin');
 
 async function init() {
-    // 1. Verifica Identità
+    // Forza la scomparsa del caricamento dopo 3 secondi in ogni caso
+    setTimeout(() => document.getElementById('loadingOverlay').classList.add('hidden'), 3000);
+
+    // Identificazione
     if (adminPw && ADMIN_LIST[adminPw]) {
         isAdmin = true;
         document.getElementById('adminArea').classList.remove('hidden');
-        document.getElementById('adminNameDisplay').innerText = ADMIN_LIST[adminPw];
     } else if (userPw !== PW_USER) {
-        document.getElementById('loadingOverlay').innerHTML = "ACCESSO NEGATO<br><small>Usa il link corretto fornito dall'admin.</small>";
+        document.getElementById('loadingOverlay').innerHTML = "Accesso negato.";
         return;
     }
 
-    // 2. Recupera Torneo (da URL o da memoria locale dell'admin)
-    currentBin = binParam || (isAdmin ? localStorage.getItem('last_bin_' + adminPw) : null);
+    currentBin = binParam || (isAdmin ? localStorage.getItem('last_bin_bridge_' + adminPw) : null);
 
     if (currentBin && currentBin !== "null") {
         await loadTorneo();
-        if (isAdmin) document.getElementById('activeControls').classList.remove('hidden');
     } else {
         document.getElementById('loadingOverlay').classList.add('hidden');
-        document.getElementById('mainContent').classList.remove('hidden');
     }
 }
 
@@ -116,33 +110,28 @@ async function loadTorneo() {
         });
         const data = await res.json();
         torneoData = data.record;
+        if (isAdmin) document.getElementById('activeControls').classList.remove('hidden');
         render();
-    } catch (e) {
-        console.error("Errore caricamento bin");
-        document.getElementById('eventTitle').innerText = "ERRORE CARICAMENTO";
-    }
+    } catch (e) { console.error("Errore fetch"); }
     document.getElementById('loadingOverlay').classList.add('hidden');
-    document.getElementById('mainContent').classList.remove('hidden');
 }
 
 async function createNewTorneo() {
-    const t = document.getElementById('newTitle').value || "TORNEO BRIDGE";
-    const d = document.getElementById('newDate').value || "Da definire";
+    const t = document.getElementById('newTitle').value || "TORNEO";
+    const d = document.getElementById('newDate').value || "-";
     const m = document.getElementById('newMax').value || 16;
-    
-    document.getElementById('loadingOverlay').classList.remove('hidden');
     
     try {
         const res = await fetch(JBASE, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY, 'X-Bin-Name': 'Bridge_' + Date.now() },
-            body: JSON.stringify({ meta: { title: t, date: d, max: m, owner: adminPw }, players: [] })
+            headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
+            body: JSON.stringify({ meta: { title: t, date: d, max: m }, players: [] })
         });
         const data = await res.json();
-        const newId = data.metadata.id;
-        if (isAdmin) localStorage.setItem('last_bin_' + adminPw, newId);
-        window.location.href = `?admin=${adminPw}&bin=${newId}`;
-    } catch (e) { alert("Errore creazione torneo."); document.getElementById('loadingOverlay').classList.add('hidden'); }
+        const nid = data.metadata.id;
+        if (isAdmin) localStorage.setItem('last_bin_bridge_' + adminPw, nid);
+        window.location.href = `?admin=${adminPw}&bin=${nid}`;
+    } catch (e) { alert("Errore creazione"); }
 }
 
 function render() {
@@ -150,38 +139,26 @@ function render() {
     document.getElementById('eventDate').innerText = torneoData.meta.date;
     document.getElementById('counter').innerText = `${torneoData.players.length}/${torneoData.meta.max}`;
     const list = document.getElementById('playerList');
-    list.innerHTML = torneoData.players.length ? '' : '<p style="color:#aaa; font-style:italic">Nessun iscritto...</p>';
+    list.innerHTML = '';
     torneoData.players.forEach((p, i) => {
-        list.innerHTML += `
-            <div class="player-row">
-                <span class="player-num">${i+1}</span>
-                <span class="player-name">${p}</span>
-                ${isAdmin ? `<button class="del-btn" onclick="deletePair(${i})">×</button>` : ''}
-            </div>`;
+        list.innerHTML += `<div class="player-row"><span class="player-num">${i+1}</span><span class="player-name">${p}</span>${isAdmin ? `<button class="del-btn" onclick="deletePair(${i})">×</button>` : ''}</div>`;
     });
 }
 
 async function addPair() {
     const name = document.getElementById('playerName').value.trim();
-    if (!name) return;
-    if (torneoData.players.length >= torneoData.meta.max) { alert("Torneo completo!"); return; }
+    if (!name || torneoData.players.length >= torneoData.meta.max) return;
     torneoData.players.push(name);
     document.getElementById('playerName').value = '';
     await updateDB();
 }
 
 async function deletePair(i) {
-    if (confirm("Rimuovere la coppia?")) {
-        torneoData.players.splice(i, 1);
-        await updateDB();
-    }
+    if (confirm("Rimuovere?")) { torneoData.players.splice(i, 1); await updateDB(); }
 }
 
 async function resetCurrentTorneo() {
-    if (confirm("Azzerare tutti gli iscritti?")) {
-        torneoData.players = [];
-        await updateDB();
-    }
+    if (confirm("Azzerare tutto?")) { torneoData.players = []; await updateDB(); }
 }
 
 async function updateDB() {
@@ -195,7 +172,7 @@ async function updateDB() {
 
 function shareWA() {
     const link = `${window.location.origin}${window.location.pathname}?user=${PW_USER}&bin=${currentBin}`;
-    const text = `*${torneoData.meta.title}*\n📅 ${torneoData.meta.date}\n\nPer iscrivervi cliccate qui:\n${link}`;
+    const text = `*${torneoData.meta.title}*\n📅 ${torneoData.meta.date}\n\nIscriviti qui:\n${link}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
 }
 
