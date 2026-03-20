@@ -3,157 +3,150 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bridge Manager - ANACROB</title>
+<title>Duplicato di Bridge</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg:#f0ede8; --surface:#faf8f5; --card:#fff; --border:#e2dcd4;
     --blue:#2145a0; --blue-l:#3a63c8; --blue-bg:#e8edf8;
-    --sage:#8aab8e; --text:#3a3530; --text-m:#7a7068; --text-l:#b0a89e; --r:14px;
+    --sage:#8aab8e; --sage-bg:#eaf2eb;
+    --blush:#c4847a; --blush-l:#e8b8b2; --blush-bg:#fceeed;
+    --slate:#7a8fa6; --slate-bg:#eaf0f6;
+    --sand:#b89a6e; --sand-bg:#f8f2e8;
+    --text:#3a3530; --text-m:#7a7068; --text-l:#b0a89e;
+    --r:14px;
   }
   *{margin:0;padding:0;box-sizing:border-box;}
-  body{background:var(--bg);min-height:100vh;font-family:'Nunito',sans-serif;color:var(--text);padding:15px;}
-  .container{max-width:680px;margin:0 auto;}
-  
-  /* Header */
-  header{background:var(--card);border-bottom:2px solid var(--blue-bg);padding:20px;text-align:center;border-radius:20px;margin-bottom:15px;}
-  h1{font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--blue);}
-  
-  /* Admin Panel */
-  .admin-bar{background:#2c3e50;color:white;border-radius:var(--r);padding:20px;margin-bottom:15px;box-shadow:0 4px 15px rgba(0,0,0,0.1);}
-  .admin-title{font-size:12px;font-weight:800;color:#d4af37;text-transform:uppercase;margin-bottom:15px;display:flex;justify-content:space-between;}
-  
-  .link-box{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;margin-bottom:10px;}
-  .link-label{font-size:10px;font-weight:700;color:#bdc3c7;margin-bottom:5px;display:block;}
-  .link-row{display:flex;gap:8px;align-items:center;}
-  .link-url{flex:1;font-size:11px;color:white;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:monospace;}
-  .copy-mini{background:var(--blue);color:white;border:none;padding:5px 10px;border-radius:5px;font-size:10px;cursor:pointer;}
+  body{background:var(--bg);min-height:100vh;font-family:'Nunito',sans-serif;color:var(--text);
+    background-image:radial-gradient(circle at 15% 15%,rgba(33,69,160,.06) 0%,transparent 45%),
+    radial-gradient(circle at 85% 80%,rgba(196,132,122,.09) 0%,transparent 45%);}
 
-  .admin-btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:15px;}
-  .ab{flex:1;min-width:140px;padding:10px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:var(--surface);color:var(--text-m);}
-  .ab.wa{background:#25d366;color:white;}
-  .ab.new{background:var(--blue);color:white;}
-
-  /* UI Elements */
-  .status-bar{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:15px;margin-bottom:15px;}
-  .prog-track{height:8px;background:var(--border);border-radius:10px;margin-top:10px;overflow:hidden;}
-  .prog-fill{height:100%;background:var(--blue);width:0%;transition:width 0.5s;}
-  
-  .lists-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:15px;}
-  .list-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:15px;}
-  .reg-item{display:flex;justify-content:space-between;padding:8px;background:var(--surface);border-radius:8px;margin-bottom:5px;font-size:13px;}
-  .del-btn{color:#e74c3c;background:none;border:none;font-weight:800;cursor:pointer;padding:0 5px;}
-  
-  .form-card{background:var(--card);padding:20px;border-radius:var(--r);border:1px solid var(--border);}
-  input{width:100%;padding:12px;margin-bottom:10px;border-radius:8px;border:1.5px solid var(--border);font-family:inherit;}
-  .submit-btn{width:100%;padding:14px;background:var(--blue);color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;}
-
-  .overlay{position:fixed;inset:0;background:rgba(255,255,255,0.9);z-index:100;display:flex;align-items:center;justify-content:center;}
+  .overlay{position:fixed;inset:0;background:rgba(240,237,232,.97);backdrop-filter:blur(4px);
+    z-index:100;display:flex;align-items:center;justify-content:center;padding:24px;}
+  .overlay.hidden{display:none;}
   .hidden{display:none !important;}
-  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#333;color:white;padding:10px 20px;border-radius:20px;font-size:13px;z-index:200;display:none;}
+  .modal{background:var(--card);border:1px solid var(--border);border-radius:20px;
+    padding:32px 28px;max-width:440px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.08);}
+  .modal h2{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;color:var(--blue);margin-bottom:4px;}
+  .modal .sub{font-size:12px;color:var(--text-l);margin-bottom:22px;}
+
+  .field{margin-bottom:13px;}
+  .field label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--blue);margin-bottom:4px;}
+  .field input{width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:9px;padding:10px 13px;font-size:14px;}
+
+  .btn{width:100%;padding:13px;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:14px;margin-top:6px;}
+  .btn-blue{background:var(--blue);color:#fff;}
+  .btn-ghost{background:var(--surface);color:var(--text-m);border:1.5px solid var(--border);}
+  .btn-danger{background:var(--blush);color:#fff;}
+
+  header{background:var(--card);border-bottom:2px solid var(--blue-bg);padding:26px 24px 20px;text-align:center;}
+  h1{font-family:'Cormorant Garamond',serif;font-size:32px;color:var(--blue);}
+  h1 small{display:block;font-size:.5em;color:var(--text-m);text-transform:uppercase;}
+
+  .container{max-width:680px;margin:0 auto;padding:22px 16px 60px;}
+  .admin-bar{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;margin-bottom:14px;}
+  .admin-btns{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px;}
+  .ab{padding:7px 13px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);background:var(--surface);color:var(--text-m);}
+  .ab.wa{background:#25d366;color:white;border:none;}
+
+  .status-bar{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px 20px;margin-bottom:14px;}
+  .prog-track{height:7px;background:var(--border);border-radius:99px;margin-top:10px;}
+  .prog-fill{height:100%;background:var(--blue);width:0%;transition:width .5s;}
+
+  .lists-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+  @media(max-width:480px){.lists-grid{grid-template-columns:1fr;}}
+  .list-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px 14px;}
+  .reg-item{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:7px;margin-bottom:4px;background:var(--surface);font-size:13px;}
+  .reg-item.mine{background:var(--blue-bg);border:1px solid rgba(33,69,160,.15);}
+  .empty-slot{padding:6px 9px;border:1.5px dashed var(--border);border-radius:7px;margin-bottom:4px;font-size:12px;color:var(--text-l);font-style:italic;}
+
+  .form-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:22px 20px;}
+  .submit-btn{width:100%;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;}
+  
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:#fff;padding:11px 22px;border-radius:99px;font-size:13px;transition:transform .3s;z-index:300;}
+  .toast.show{transform:translateX(-50%) translateY(0);}
 </style>
 </head>
 <body>
 
-<div id="loadingOverlay" class="overlay"><b>Caricamento...</b></div>
+<div class="overlay" id="loadingOverlay"><p>Caricamento…</p></div>
 
-<div id="setupOverlay" class="overlay hidden">
-  <div style="background:white;padding:30px;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,0.1);max-width:400px;width:90%;">
-    <h2 style="margin-bottom:15px;font-family:serif">Nuovo Torneo</h2>
-    <input type="text" id="sTitle" placeholder="Titolo (es. Torneo del Lunedì)">
-    <input type="text" id="sDate" placeholder="Data e Ora (es. 25 Marzo ore 21)">
-    <input type="number" id="sMax" value="8" placeholder="Max Coppie">
-    <button class="submit-btn" onclick="launch()">CREA TORNEO</button>
+<div class="overlay hidden" id="setupOverlay">
+  <div class="modal">
+    <h2>Nuovo torneo</h2>
+    <div class="field"><label>Nome evento</label><input type="text" id="sTitle" value="Duplicato di Bridge"></div>
+    <div class="field"><label>Data</label><input type="date" id="sDate"></div>
+    <div class="field"><label>Numero coppie (max)</label><input type="number" id="sMaxCoppie" value="4"></div>
+    <button class="btn btn-blue" onclick="launch()">Crea torneo →</button>
   </div>
 </div>
 
+<header>
+  <h1><small>Torneo</small><span id="hTitle">—</span></h1>
+  <p id="mDateTxt" style="font-size:14px;color:var(--text-m)"></p>
+</header>
+
 <div class="container">
-  <header>
-    <h1><small style="display:block;font-size:12px;text-transform:uppercase;color:var(--text-m)">Bridge Manager</small><span id="hTitle">---</span></h1>
-    <p id="hDate" style="color:var(--blue);font-weight:700;margin-top:5px"></p>
-  </header>
-
-  <div id="adminBar" class="admin-bar hidden">
-    <div class="admin-title">⚙️ Gestione Organizzatore (<span id="adminName"></span>)</div>
-    
-    <div class="link-box">
-      <span class="link-label">🔗 LINK ORGANIZZATORE (Salva questo nei preferiti)</span>
-      <div class="link-row">
-        <div class="link-url" id="urlAdmin">---</div>
-        <button class="copy-mini" onclick="copyText('urlAdmin')">COPIA</button>
-      </div>
-    </div>
-
-    <div class="link-box">
-      <span class="link-label">👥 LINK PARTECIPANTI (Da inviare ai soci)</span>
-      <div class="link-row">
-        <div class="link-url" id="urlUser">---</div>
-        <button class="copy-mini" onclick="copyText('urlUser')">COPIA</button>
-      </div>
-    </div>
-
+  <div class="admin-bar" id="adminBar" style="display:none">
+    <div style="font-size:11px;font-weight:800;color:var(--blue);margin-bottom:8px">⚙️ PANNELLO ADMIN (<span id="adminName"></span>)</div>
     <div class="admin-btns">
       <button class="ab wa" onclick="copyInvite()">📋 COPIA INVITO WA</button>
-      <button class="ab" onclick="copyList()">📋 COPIA LISTA</button>
-      <button class="ab new" onclick="show('setupOverlay')">🔄 NUOVO TORNEO</button>
+      <button class="ab" onclick="copyList()">📋 COPIA LISTA ISCRITTI</button>
+      <button class="ab" onclick="show('setupOverlay')">🔄 NUOVO TORNEO</button>
+      <button class="ab" style="color:red" onclick="doReset()">↺ RESET LISTA</button>
     </div>
   </div>
 
   <div class="status-bar">
     <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:800">
-      <span>ISCRITTI</span>
-      <span id="cCountDisplay">0 / 0 COPPIE</span>
+      <span>ISCRIZIONI</span>
+      <span><span id="cCount">0</span> / <span id="cMax">0</span> COPPIE</span>
     </div>
-    <div class="prog-track"><div id="progFill" class="prog-fill"></div></div>
+    <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
   </div>
 
   <div class="lists-grid">
-    <div class="list-card"><h3>👫 Coppie</h3><div id="cList" style="margin-top:10px"></div></div>
-    <div class="list-card"><h3>🙋 Singoli</h3><div id="sList" style="margin-top:10px"></div></div>
+    <div class="list-card"><h3>👫 Coppie</h3><div id="cList"></div></div>
+    <div class="list-card"><h3>🙋 Singoli</h3><div id="sList"></div></div>
   </div>
 
   <div class="form-card" id="formCard">
-    <h3 style="margin-bottom:10px;font-size:15px">Iscrizione:</h3>
-    <input type="text" id="n1" placeholder="Nome Giocatore 1">
-    <input type="text" id="n2" placeholder="Nome Giocatore 2 (opzionale)">
+    <input type="text" id="n1" placeholder="Nome Giocatore 1" style="width:100%;padding:10px;margin-bottom:8px;border-radius:8px;border:1.5px solid var(--border)">
+    <input type="text" id="n2" placeholder="Nome Giocatore 2 (opzionale)" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:1.5px solid var(--border)">
     <button class="submit-btn" onclick="register()">CONFERMA ISCRIZIONE</button>
   </div>
 </div>
 
-<div id="toast" class="toast">Copiato!</div>
+<div class="toast" id="toast"></div>
 
 <script>
 const MASTER_KEY = '$2a$10$1qayBZ95jStLXaEK5ql6pOfEsL2lCZI9Zo6tu7.u0kko0C.DNEv16';
+const ACCESS_KEY = '$2a$10$meqPLCGo48xs4Me.qNnIUefaCedxyQ0Bgpi7OcAcBqG.aNPILz6lC';
 const ADMIN_LIST = { 'GK020160': 'ANACROB', 'Kial$$44': 'ASSISTENTE' };
 const JBASE = 'https://api.jsonbin.io/v3/b';
-const MYCODE = localStorage.getItem('br_code_v7') || Math.random().toString(36).slice(2,10);
-localStorage.setItem('br_code_v7', MYCODE);
+const MYCODE = localStorage.getItem('br_code') || Math.random().toString(36).slice(2,10);
+localStorage.setItem('br_code', MYCODE);
 
-let BIN_ID, isAdmin=false, regs=[], MAX=8, curPw='';
+let BIN_ID, isAdmin=false, regs=[], MAX=4, curAdminPw='';
 
 (async () => {
   const p = new URLSearchParams(location.search);
-  curPw = p.get('admin');
+  curAdminPw = p.get('admin');
+  const userPw = p.get('user');
   BIN_ID = p.get('bin');
-  const userMode = p.get('user') === 'anacrob';
 
-  if (curPw && ADMIN_LIST[curPw]) {
+  if (curAdminPw && ADMIN_LIST[curAdminPw]) {
     isAdmin = true;
-    document.getElementById('adminBar').classList.remove('hidden');
-    document.getElementById('adminName').textContent = ADMIN_LIST[curPw];
-    if (!BIN_ID) BIN_ID = localStorage.getItem('last_bin_' + curPw);
+    document.getElementById('adminBar').style.display = 'block';
+    document.getElementById('adminName').textContent = ADMIN_LIST[curAdminPw];
+    if (!BIN_ID) BIN_ID = localStorage.getItem('last_bin_' + curAdminPw);
     if (!BIN_ID) { hide('loadingOverlay'); show('setupOverlay'); return; }
-  } else if (!userMode || !BIN_ID) {
-    document.body.innerHTML = "<div style='text-align:center;padding:50px'><h2>Accesso Negato</h2><p>Usa il link corretto.</p></div>";
+  } else if (userPw !== 'anacrob' || !BIN_ID) {
+    document.body.innerHTML = "<h2 style='text-align:center;margin-top:50px'>Accesso Negato</h2>";
     return;
   }
 
-  // Genera i link per il pannello
-  const baseUrl = location.origin + location.pathname;
-  document.getElementById('urlAdmin').textContent = `${baseUrl}?admin=${curPw}&bin=${BIN_ID}`;
-  document.getElementById('urlUser').textContent = `${baseUrl}?user=anacrob&bin=${BIN_ID}`;
-
-  if (isAdmin) localStorage.setItem('last_bin_' + curPw, BIN_ID);
+  if (isAdmin) localStorage.setItem('last_bin_' + curAdminPw, BIN_ID);
   await load();
   hide('loadingOverlay');
   setInterval(load, 20000);
@@ -162,11 +155,11 @@ let BIN_ID, isAdmin=false, regs=[], MAX=8, curPw='';
 async function load() {
   try {
     const r = await fetch(`${JBASE}/${BIN_ID}/latest`, {headers:{'X-Master-Key':MASTER_KEY}});
-    const d = await r.json();
-    regs = d.record.registrations || [];
-    MAX = d.record.meta.maxCoppie || 8;
-    document.getElementById('hTitle').textContent = d.record.meta.title;
-    document.getElementById('hDate').textContent = d.record.meta.date;
+    const data = await r.json();
+    regs = data.record.registrations || [];
+    MAX = data.record.meta.maxCoppie || 4;
+    document.getElementById('hTitle').textContent = data.record.meta.title;
+    document.getElementById('mDateTxt').textContent = data.record.meta.date;
     render();
   } catch(e) {}
 }
@@ -174,24 +167,27 @@ async function load() {
 function render() {
   const cp = regs.filter(r => r.n2);
   const sg = regs.filter(r => !r.n2);
-  document.getElementById('cCountDisplay').textContent = `${cp.length} / ${MAX} COPPIE`;
+  document.getElementById('cCount').textContent = cp.length;
+  document.getElementById('cMax').textContent = MAX;
   document.getElementById('progFill').style.width = (cp.length/MAX*100)+'%';
 
   const cl = document.getElementById('cList'); cl.innerHTML = '';
   cp.forEach((r, i) => {
-    cl.innerHTML += `<div class="reg-item"><span><b>${i+1}.</b> ${r.n1} - ${r.n2}</span> ${isAdmin?`<button class="del-btn" onclick="del(${regs.indexOf(r)})">×</button>`:''}</div>`;
+    cl.innerHTML += `<div class="reg-item ${r.code===MYCODE?'mine':''}"><b>${i+1}.</b> ${r.n1} & ${r.n2} ${isAdmin?`<button onclick="del(${regs.indexOf(r)})">×</button>`:''}</div>`;
   });
+  for(let i=cp.length; i<MAX; i++) cl.innerHTML += `<div class="empty-slot">Libero</div>`;
+
   const sl = document.getElementById('sList'); sl.innerHTML = '';
   sg.forEach((r) => {
-    sl.innerHTML += `<div class="reg-item"><span>• ${r.n1}</span> ${isAdmin?`<button class="del-btn" onclick="del(${regs.indexOf(r)})">×</button>`:''}</div>`;
+    sl.innerHTML += `<div class="reg-item ${r.code===MYCODE?'mine':''}">• ${r.n1} ${isAdmin?`<button onclick="del(${regs.indexOf(r)})">×</button>`:''}</div>`;
   });
 }
 
 async function launch() {
-  const meta = { title: document.getElementById('sTitle').value || 'Torneo Bridge', date: document.getElementById('sDate').value || '-', maxCoppie: parseInt(document.getElementById('sMax').value) || 8 };
+  const meta = { title: document.getElementById('sTitle').value, date: document.getElementById('sDate').value, maxCoppie: parseInt(document.getElementById('sMaxCoppie').value) };
   const r = await fetch(JBASE, { method:'POST', headers:{'Content-Type':'application/json','X-Master-Key':MASTER_KEY}, body:JSON.stringify({registrations:[], meta}) });
-  const d = await r.json();
-  location.href = `?admin=${curPw}&bin=${d.metadata.id}`;
+  const data = await r.json();
+  location.href = `?admin=${curAdminPw}&bin=${data.metadata.id}`;
 }
 
 async function register() {
@@ -204,33 +200,38 @@ async function register() {
 }
 
 async function del(idx) { if(confirm("Rimuovere?")) { regs.splice(idx,1); await save(); } }
+async function doReset() { if(confirm("Azzerare?")) { regs=[]; await save(); } }
 
 async function save() {
-  await fetch(`${JBASE}/${BIN_ID}`, { method:'PUT', headers:{'Content-Type':'application/json','X-Master-Key':MASTER_KEY}, body:JSON.stringify({registrations:regs, meta:{title:document.getElementById('hTitle').textContent, date:document.getElementById('hDate').textContent, maxCoppie:MAX}}) });
+  const r = await fetch(`${JBASE}/${BIN_ID}/latest`, {headers:{'X-Master-Key':MASTER_KEY}});
+  const data = await r.json();
+  data.record.registrations = regs;
+  await fetch(`${JBASE}/${BIN_ID}`, { method:'PUT', headers:{'Content-Type':'application/json','X-Master-Key':MASTER_KEY}, body:JSON.stringify(data.record) });
   render();
 }
 
-function copyText(id) {
-  const t = document.getElementById(id).textContent;
-  navigator.clipboard.writeText(t);
-  showToast("Link copiato!");
-}
-
 function copyInvite() {
-  const url = document.getElementById('urlUser').textContent;
-  const txt = `🃏 *${document.getElementById('hTitle').textContent}*\n📅 ${document.getElementById('hDate').textContent}\n\nIscriviti qui:\n${url}`;
-  navigator.clipboard.writeText(txt);
-  showToast("Invito WA copiato!");
+  const url = `${location.origin}${location.pathname}?user=anacrob&bin=${BIN_ID}`;
+  const txt = `🃏 *${document.getElementById('hTitle').textContent}*\n📅 ${document.getElementById('mDateTxt').textContent}\n\nPer iscrivervi cliccate qui:\n${url}`;
+  copyToClipboard(txt, "Invito copiato! Incollalo su WhatsApp.");
 }
 
 function copyList() {
-  let txt = `🃏 LISTA ${document.getElementById('hTitle').textContent}\n\n`;
-  regs.filter(r=>r.n2).forEach((r,i) => txt += `${i+1}. ${r.n1} & ${r.n2}\n`);
-  navigator.clipboard.writeText(txt);
-  showToast("Lista copiata!");
+  const cp = regs.filter(r => r.n2);
+  const sg = regs.filter(r => !r.n2);
+  let txt = `🃏 LISTA ${document.getElementById('hTitle').textContent}\n\n👫 COPPIE:\n`;
+  cp.forEach((r,i) => txt += `${i+1}. ${r.n1} & ${r.n2}\n`);
+  txt += `\n🙋 SINGOLI:\n`;
+  sg.forEach(r => txt += `• ${r.n1}\n`);
+  copyToClipboard(txt, "Lista copiata! Incollala su WhatsApp.");
 }
 
-function showToast(m) { const t=document.getElementById('toast'); t.textContent=m; t.style.display='block'; setTimeout(()=>t.style.display='none',2000); }
+function copyToClipboard(text, msg) {
+  const el = document.createElement('textarea'); el.value = text; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
+  toast(msg);
+}
+
+function toast(m) { const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); }
 function show(id){document.getElementById(id).classList.remove('hidden')}
 function hide(id){document.getElementById(id).classList.add('hidden')}
 </script>
