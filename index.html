@@ -398,6 +398,7 @@
 const MASTER_KEY = '$2a$10$1qayBZ95jStLXaEK5ql6pOfEsL2lCZI9Zo6tu7.u0kko0C.DNEv16';
 const ACCESS_KEY = '$2a$10$meqPLCGo48xs4Me.qNnIUefaCedxyQ0Bgpi7OcAcBqG.aNPILz6lC';
 const PW_ADMIN   = 'GK020160';
+const ADMIN_LIST = ['GK020160', 'Kial$$44'];
 const PW_USER    = 'anacrob';
 const LKEY       = 'bridge-bin-v6';
 const MYCODE_KEY = 'bridge-mycode-v6';
@@ -423,14 +424,15 @@ function getMyCode() {
   const userPw  = p.get('user');
   const binParam = p.get('bin');
 
-  if (adminPw === PW_ADMIN) {
+if (ADMIN_LIST.includes(adminPw)) {
     isAdmin = true;
-  } else if (userPw === PW_USER) {
+} else if (userPw === PW_USER) {
     isAdmin = false;
-  } else {
-    hide('loadingOverlay'); show('deniedOverlay'); return;
-  }
-
+} else {
+    hide('loadingOverlay'); 
+    show('deniedOverlay'); 
+    return;
+}  
   myCode = getMyCode();
 
   if (isAdmin) {
