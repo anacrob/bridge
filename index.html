@@ -232,12 +232,19 @@
   <div class="modal" style="text-align:center">
     <div style="font-size:40px;margin-bottom:10px">🎉</div>
     <h2 style="margin-bottom:4px">Torneo creato!</h2>
-    <p class="sub">Manda questo link su WhatsApp</p>
+    <p class="sub">Manda il link partecipanti su WhatsApp</p>
     <div class="share-box">
       <p>📤 Link partecipanti</p>
       <div class="share-row">
         <div class="share-url" id="shareUrlTxt">—</div>
-        <button class="copy-btn" id="copyBtn1" onclick="doCopy('copyBtn1')">📋 Copia</button>
+        <button class="copy-btn" id="copyBtn1" onclick="doCopy('copyBtn1',false)">📋 Copia</button>
+      </div>
+    </div>
+    <div class="share-box" style="margin-top:8px;background:var(--sage-bg);border-color:var(--sage)">
+      <p style="color:var(--sage)">🔑 Link admin (per te)</p>
+      <div class="share-row">
+        <div class="share-url" id="shareAdminTxt" style="color:var(--sage)">—</div>
+        <button class="copy-btn" id="copyBtn1a" onclick="doCopy('copyBtn1a',true)" style="background:var(--sage)">📋 Copia</button>
       </div>
     </div>
     <button class="btn btn-blue" style="margin-top:6px" onclick="hide('shareOverlay')">Vai alla lista →</button>
@@ -314,10 +321,17 @@
   <div class="admin-bar" id="adminBar" style="display:none">
     <div class="admin-title">⚙️ Pannello organizzatore</div>
     <div class="admin-share-box">
-      <p>📤 Link per i partecipanti</p>
+      <p>📤 Link partecipanti</p>
       <div class="admin-share-row">
         <div class="admin-url" id="adminUrlTxt">—</div>
-        <button class="copy-btn" id="copyBtn2" onclick="doCopy('copyBtn2')" style="font-size:11px;padding:7px 11px">📋 Copia</button>
+        <button class="copy-btn" id="copyBtn2" onclick="doCopy('copyBtn2',false)" style="font-size:11px;padding:7px 11px">📋 Copia</button>
+      </div>
+    </div>
+    <div class="admin-share-box" style="background:var(--sage-bg);border-color:var(--sage);margin-top:8px">
+      <p style="color:var(--sage)">🔑 Link admin (tuo accesso)</p>
+      <div class="admin-share-row">
+        <div class="admin-url" id="adminUrlSelf" style="color:var(--sage)">—</div>
+        <button class="copy-btn" id="copyBtn3" onclick="doCopy('copyBtn3',true)" style="font-size:11px;padding:7px 11px;background:var(--sage)">📋 Copia</button>
       </div>
     </div>
     <div class="admin-btns">
@@ -326,6 +340,10 @@
       <button class="ab red" onclick="show('resetOverlay')">↺ Reset iscrizioni</button>
     </div>
     <div class="export-box" id="exportBox"></div>
+    <button id="copyExportBtn" class="copy-btn hidden" onclick="copyExport()"
+            style="margin-top:8px;width:100%;padding:9px;font-size:12px;background:var(--sage)">
+      📋 Copia testo lista
+    </button>
   </div>
 
   <!-- STATO -->
@@ -397,17 +415,21 @@
 // ── CREDENZIALI ───────────────────────────────────────────────
 const MASTER_KEY = '$2a$10$1qayBZ95jStLXaEK5ql6pOfEsL2lCZI9Zo6tu7.u0kko0C.DNEv16';
 const ACCESS_KEY = '$2a$10$meqPLCGo48xs4Me.qNnIUefaCedxyQ0Bgpi7OcAcBqG.aNPILz6lC';
-const PW_ADMIN   = 'GK020160';
-const ADMIN_LIST = ['GK020160', 'Kial$$44'];
+// Due admin con storage separato — ognuno gestisce i propri tornei
+const ADMINS = {
+  'GK020160': { lkey: 'bridge-bin-GK',   label: 'Admin 1' },
+  'Kial$$44': { lkey: 'bridge-bin-Kial', label: 'Admin 2' },
+};
 const PW_USER    = 'anacrob';
-const LKEY       = 'bridge-bin-v6';
 const MYCODE_KEY = 'bridge-mycode-v6';
+let   LKEY       = null;   // impostato al login in base all'admin
 const JBASE      = 'https://api.jsonbin.io/v3/b';
 
 // ── STATE ─────────────────────────────────────────────────────
 let MAX_COPPIE=4, BIN_ID=null, regs=[], curType='coppia';
 let lastHash='', isAdmin=false, myCode=null;
-let userShareUrl='';
+let userShareUrl='', adminShareUrl='';
+let adminPwCurrent = null;
 let pendingSelfDelIdx = null;
 
 // Codice personale: generato una volta, salvato nel browser
@@ -424,19 +446,22 @@ function getMyCode() {
   const userPw  = p.get('user');
   const binParam = p.get('bin');
 
-if (ADMIN_LIST.includes(adminPw)) {
+  if (adminPw && ADMINS[adminPw]) {
     isAdmin = true;
-} else if (userPw === PW_USER) {
+    LKEY = ADMINS[adminPw].lkey;          // storage separato per ogni admin
+  } else if (userPw === PW_USER) {
     isAdmin = false;
-} else {
-    hide('loadingOverlay'); 
-    show('deniedOverlay'); 
+  } else {
+    hide('loadingOverlay');
+    show('deniedOverlay');
     return;
-}  
+  }
+
   myCode = getMyCode();
 
   if (isAdmin) {
     document.getElementById('adminBar').style.display = 'block';
+    adminPwCurrent = adminPw;             // salva pw admin corrente per buildAdminUrl
     try { BIN_ID = localStorage.getItem(LKEY) || null; } catch(e){}
     if (!BIN_ID) {
       hide('loadingOverlay'); prefillDate(); show('setupOverlay'); return;
@@ -447,7 +472,7 @@ if (ADMIN_LIST.includes(adminPw)) {
   }
 
   buildUserUrl();
-  if (isAdmin) updateAdminUrl();
+  if (isAdmin) { buildAdminUrl(); updateAdminUrls(); }
 
   await loadAll();
   hide('loadingOverlay');
@@ -460,8 +485,13 @@ function buildUserUrl() {
   const base = location.origin + location.pathname.replace(/\/+$/,'');
   userShareUrl = `${base}?user=${PW_USER}&bin=${BIN_ID}`;
 }
-function updateAdminUrl() {
-  document.getElementById('adminUrlTxt').textContent = userShareUrl;
+function buildAdminUrl() {
+  const base = location.origin + location.pathname.replace(/\/+$/,'');
+  adminShareUrl = `${base}?admin=${encodeURIComponent(adminPwCurrent)}`;
+}
+function updateAdminUrls() {
+  document.getElementById('adminUrlTxt').textContent  = userShareUrl;
+  document.getElementById('adminUrlSelf').textContent = adminShareUrl;
 }
 
 // ── SETUP ─────────────────────────────────────────────────────
@@ -499,9 +529,10 @@ async function launch() {
     const data = await r.json();
     BIN_ID = data.metadata.id;
     try { localStorage.setItem(LKEY,BIN_ID); } catch(e){}
-    buildUserUrl(); updateAdminUrl(); applyMeta(meta);
+    buildUserUrl(); buildAdminUrl(); updateAdminUrls(); applyMeta(meta);
     hide('setupOverlay');
-    document.getElementById('shareUrlTxt').textContent = userShareUrl;
+    document.getElementById('shareUrlTxt').textContent  = userShareUrl;
+    document.getElementById('shareAdminTxt').textContent = adminShareUrl;
     show('shareOverlay');
     render();
     setSS('live','Aggiornato in tempo reale');
@@ -514,23 +545,41 @@ async function launch() {
 
 function nuovoTorneo() {
   hide('newOverlay'); BIN_ID=null; regs=[];
-  try { localStorage.removeItem(LKEY); } catch(e){}
+  if (LKEY) { try { localStorage.removeItem(LKEY); } catch(e){} }
   prefillDate(); show('setupOverlay');
 }
 
 // ── COPIA ─────────────────────────────────────────────────────
-function doCopy(btnId) {
+function doCopy(btnId, isAdminUrl) {
+  const url = isAdminUrl ? adminShareUrl : userShareUrl;
   const copy = () => {
     const b = document.getElementById(btnId);
     const orig = b.textContent;
     b.textContent='✓ Copiato!'; b.classList.add('ok');
     setTimeout(()=>{ b.textContent=orig; b.classList.remove('ok'); },2000);
   };
-  navigator.clipboard.writeText(userShareUrl).then(copy).catch(()=>{
+  navigator.clipboard.writeText(url).then(copy).catch(()=>{
     const ta=document.createElement('textarea');
-    ta.value=userShareUrl; ta.style.cssText='position:fixed;opacity:0';
+    ta.value=url; ta.style.cssText='position:fixed;opacity:0';
     document.body.appendChild(ta); ta.select(); document.execCommand('copy');
     document.body.removeChild(ta); copy();
+  });
+}
+
+function copyExport() {
+  const txt = document.getElementById('exportBox').textContent;
+  if (!txt) return;
+  const b = document.getElementById('copyExportBtn');
+  navigator.clipboard.writeText(txt).then(()=>{
+    b.textContent='✓ Copiato!'; b.classList.add('ok');
+    setTimeout(()=>{ b.textContent='📋 Copia testo'; b.classList.remove('ok'); },2000);
+  }).catch(()=>{
+    const ta=document.createElement('textarea');
+    ta.value=txt; ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+    b.textContent='✓ Copiato!'; b.classList.add('ok');
+    setTimeout(()=>{ b.textContent='📋 Copia testo'; b.classList.remove('ok'); },2000);
   });
 }
 
@@ -744,7 +793,9 @@ function render() {
 }
 
 function toggleExport() {
-  const b=document.getElementById('exportBox'); b.classList.toggle('show');
+  const b   = document.getElementById('exportBox');
+  const btn = document.getElementById('copyExportBtn');
+  b.classList.toggle('show');
   if (b.classList.contains('show')) {
     const cp=regs.filter(r=>r.type==='coppia'), sg=regs.filter(r=>r.type==='singolo');
     let t='🃏 DUPLICATO DI BRIDGE\n\n👫 COPPIE:\n';
@@ -753,6 +804,9 @@ function toggleExport() {
     sg.length?sg.forEach((r,i)=>t+=`  ${i+1}. ${r.names[0]}\n`):(t+='  (nessuno)\n');
     t+=`\nCoppie: ${cp.length}/${MAX_COPPIE} — Singoli: ${sg.length}`;
     b.textContent=t;
+    btn.classList.remove('hidden');
+  } else {
+    btn.classList.add('hidden');
   }
 }
 
