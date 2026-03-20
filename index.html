@@ -1,182 +1,776 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BRIDGE MANAGER - ANACROB</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-    <style>
-        :root { --primary: #1a472a; --accent: #d4af37; --bg: #f0f2f5; --red: #e74c3c; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-        body { background: var(--bg); color: #1c1e21; padding: 15px; }
-        .container { max-width: 500px; margin: 0 auto; }
-        .header { background: var(--primary); color: white; padding: 25px; border-radius: 20px; text-align: center; margin-bottom: 20px; }
-        .header h1 { font-size: 22px; margin-bottom: 5px; }
-        .header p { font-size: 14px; color: var(--accent); font-weight: 600; }
-        .admin-panel { background: #2c3e50; color: white; padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 2px solid var(--accent); }
-        input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; margin-bottom: 10px; font-size: 16px; }
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 15px; margin-bottom: 8px; }
-        .btn-main { background: var(--primary); color: white; }
-        .btn-wa { background: #25d366; color: white; }
-        .btn-reset { background: var(--red); color: white; font-size: 11px; margin-top: 10px; }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .player-row { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
-        .player-num { width: 35px; font-weight: 800; color: var(--accent); }
-        .player-name { flex: 1; font-weight: 600; }
-        .del-btn { color: #ccc; border: none; background: none; font-size: 22px; cursor: pointer; }
-        .hidden { display: none !important; }
-        #loadingOverlay { position: fixed; inset: 0; background: white; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 800; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Duplicato di Bridge</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#f0ede8; --surface:#faf8f5; --card:#fff; --border:#e2dcd4;
+    --blue:#2145a0; --blue-l:#3a63c8; --blue-bg:#e8edf8;
+    --sage:#8aab8e; --sage-bg:#eaf2eb;
+    --blush:#c4847a; --blush-l:#e8b8b2; --blush-bg:#fceeed;
+    --slate:#7a8fa6; --slate-bg:#eaf0f6;
+    --sand:#b89a6e; --sand-bg:#f8f2e8;
+    --text:#3a3530; --text-m:#7a7068; --text-l:#b0a89e;
+    --r:14px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);min-height:100vh;font-family:'Nunito',sans-serif;color:var(--text);
+    background-image:radial-gradient(circle at 15% 15%,rgba(33,69,160,.06) 0%,transparent 45%),
+    radial-gradient(circle at 85% 80%,rgba(196,132,122,.09) 0%,transparent 45%);}
+
+  .overlay{position:fixed;inset:0;background:rgba(240,237,232,.97);backdrop-filter:blur(4px);
+    z-index:100;display:flex;align-items:center;justify-content:center;padding:24px;}
+  .overlay.hidden{display:none;}
+  .hidden{display:none !important;}
+  .modal{background:var(--card);border:1px solid var(--border);border-radius:20px;
+    padding:32px 28px;max-width:440px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.08);}
+  .modal-suits{display:flex;gap:8px;margin-bottom:18px;}
+  .ms{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;}
+  .modal h2{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;color:var(--blue);margin-bottom:4px;}
+  .modal .sub{font-size:12px;color:var(--text-l);margin-bottom:22px;}
+
+  .field{margin-bottom:13px;}
+  .field label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;
+    letter-spacing:.1em;color:var(--blue);margin-bottom:4px;}
+  .field input{width:100%;background:var(--surface);border:1.5px solid var(--border);
+    border-radius:9px;padding:10px 13px;font-family:'Nunito',sans-serif;font-size:14px;
+    color:var(--text);transition:border-color .18s;-webkit-appearance:none;}
+  .field input:focus{outline:none;border-color:var(--blue);background:#fff;}
+  .field input::placeholder{color:var(--text-l);font-style:italic;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+  .btn{width:100%;padding:13px;border:none;border-radius:10px;font-family:'Nunito',sans-serif;
+    font-size:14px;font-weight:700;cursor:pointer;transition:all .18s;letter-spacing:.02em;margin-top:6px;}
+  .btn-blue{background:var(--blue);color:#fff;}
+  .btn-blue:hover:not(:disabled){background:var(--blue-l);transform:translateY(-1px);box-shadow:0 4px 20px rgba(33,69,160,.3);}
+  .btn-blue:disabled{opacity:.4;cursor:not-allowed;}
+  .btn-ghost{background:var(--surface);color:var(--text-m);border:1.5px solid var(--border);}
+  .btn-ghost:hover{background:var(--card);}
+  .btn-danger{background:var(--blush);color:#fff;}
+  .btn-danger:hover{background:#b07068;}
+
+  .share-box{background:var(--blue-bg);border:1.5px solid var(--blue);border-radius:12px;padding:14px;margin:14px 0 4px;}
+  .share-box p{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--blue);margin-bottom:7px;}
+  .share-row{display:flex;gap:7px;align-items:stretch;}
+  .share-url{flex:1;background:#fff;border:1px solid var(--border);border-radius:8px;
+    padding:8px 11px;font-size:12px;color:var(--blue);word-break:break-all;font-weight:600;line-height:1.4;}
+  .copy-btn{flex-shrink:0;padding:8px 13px;background:var(--blue);color:#fff;border:none;border-radius:8px;
+    font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .18s;white-space:nowrap;}
+  .copy-btn:hover{background:var(--blue-l);}
+  .copy-btn.ok{background:var(--sage);}
+
+  .spinner-lg{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--blue);
+    border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .spinner-sm{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.4);
+    border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:5px;}
+
+  header{background:var(--card);border-bottom:2px solid var(--blue-bg);padding:26px 24px 20px;text-align:center;}
+  .suits-row{display:flex;justify-content:center;gap:10px;margin-bottom:10px;}
+  .suit{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;}
+  h1{font-family:'Cormorant Garamond',serif;font-size:clamp(24px,6vw,38px);font-weight:700;color:var(--blue);}
+  h1 small{display:block;font-weight:400;font-style:italic;font-size:.52em;color:var(--text-m);
+    letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px;}
+  .event-meta{margin-top:10px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
+  .meta-pill{display:inline-flex;align-items:center;gap:5px;background:var(--blue-bg);
+    color:var(--blue);font-size:12px;font-weight:700;padding:4px 12px;border-radius:99px;}
+
+  .container{max-width:680px;margin:0 auto;padding:22px 16px 60px;}
+  .sync-pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--text-l);
+    background:var(--surface);border:1px solid var(--border);border-radius:99px;padding:3px 10px;margin-bottom:14px;}
+  .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--text-l);}
+  .sync-dot.live{background:var(--sage);animation:pulse 2s infinite;}
+  .sync-dot.err{background:var(--blush);}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+  /* barra stato coppie */
+  .status-bar{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+    padding:16px 20px;margin-bottom:14px;}
+  .status-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;}
+  .status-label{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--blue);font-weight:700;}
+  .status-chips{display:flex;gap:8px;}
+  .chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;
+    padding:4px 12px;border-radius:99px;}
+  .chip-blue{background:var(--blue-bg);color:var(--blue);}
+  .chip-blush{background:var(--blush-bg);color:var(--blush);}
+  .prog-track{height:7px;background:var(--border);border-radius:99px;overflow:hidden;}
+  .prog-fill{height:100%;background:linear-gradient(90deg,var(--blue-bg),var(--blue));
+    border-radius:99px;transition:width .5s cubic-bezier(.4,0,.2,1);width:0%;}
+  .status-note{font-size:11px;color:var(--text-l);margin-top:7px;font-style:italic;}
+
+  .lists-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+  @media(max-width:480px){.lists-grid{grid-template-columns:1fr;}}
+  .list-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px 14px;}
+  .lch{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+  .list-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;}
+  .lch h3{font-size:12px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.08em;flex:1;}
+  .badge{background:var(--blue-bg);color:var(--blue);font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;}
+  .badge.s{background:var(--blush-bg);color:var(--blush);}
+
+  .reg-item{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:7px;
+    margin-bottom:4px;background:var(--surface);animation:popIn .22s ease;position:relative;}
+  .reg-item.mine{background:var(--blue-bg);border:1px solid rgba(33,69,160,.15);}
+  @keyframes popIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+  .reg-num{font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:600;color:var(--blue);min-width:16px;}
+  .reg-name{flex:1;font-size:13px;font-weight:600;color:var(--text);line-height:1.4;}
+  .reg-name small{color:var(--text-l);font-size:11px;font-weight:400;}
+  .del-btn{background:none;border:none;cursor:pointer;font-size:14px;padding:2px 4px;
+    line-height:1;transition:all .15s;border-radius:5px;flex-shrink:0;}
+  .del-btn.admin-del{color:var(--text-l);}
+  .del-btn.admin-del:hover{color:var(--blush);}
+  .del-btn.mine-del{color:var(--blush);background:var(--blush-bg);font-size:11px;
+    font-family:'Nunito',sans-serif;font-weight:700;padding:2px 7px;}
+  .del-btn.mine-del:hover{background:var(--blush);color:#fff;}
+  .empty-slot{padding:6px 9px;border:1.5px dashed var(--border);border-radius:7px;
+    margin-bottom:4px;font-size:12px;color:var(--text-l);font-style:italic;}
+
+  .form-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:22px 20px;margin-bottom:14px;}
+  .form-card h2{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--blue);margin-bottom:16px;}
+  .type-toggle{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px;}
+  .tog{padding:11px 8px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);
+    color:var(--text-m);font-family:'Nunito',sans-serif;font-size:13px;font-weight:600;cursor:pointer;
+    transition:all .18s;text-align:center;}
+  .tog .icon{font-size:18px;display:block;margin-bottom:3px;}
+  .tog.active.coppia{border-color:var(--blue);background:var(--blue-bg);color:var(--blue);}
+  .tog.active.singolo{border-color:var(--blush);background:var(--blush-bg);color:var(--blush);}
+  .ig{margin-bottom:11px;}
+  .ig label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;
+    letter-spacing:.09em;color:var(--blue);margin-bottom:4px;}
+  .ig input{width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:9px;
+    padding:10px 13px;font-family:'Nunito',sans-serif;font-size:14px;color:var(--text);
+    transition:border-color .18s;-webkit-appearance:none;}
+  .ig input:focus{outline:none;border-color:var(--blue);background:#fff;}
+  .ig input::placeholder{color:var(--text-l);font-style:italic;}
+  .submit-btn{width:100%;padding:13px;background:var(--blue);border:none;border-radius:10px;
+    color:#fff;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;cursor:pointer;
+    transition:all .18s;letter-spacing:.02em;margin-top:3px;}
+  .submit-btn:hover:not(:disabled){background:var(--blue-l);transform:translateY(-1px);box-shadow:0 4px 20px rgba(33,69,160,.25);}
+  .submit-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+
+  /* avvisi */
+  .info-banner{border-radius:var(--r);padding:14px 16px;margin-bottom:14px;font-size:13px;font-weight:600;line-height:1.5;}
+  .info-banner.blue{background:var(--blue-bg);border:1.5px solid var(--blue);color:var(--blue);}
+  .info-banner.blush{background:var(--blush-bg);border:1.5px solid var(--blush);color:var(--blush);}
+
+  /* admin */
+  .admin-bar{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+    padding:16px 18px;margin-bottom:14px;}
+  .admin-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
+    color:var(--blue);margin-bottom:10px;}
+  .admin-share-box{background:var(--blue-bg);border:1px solid var(--blue);border-radius:9px;
+    padding:10px 12px;margin-bottom:10px;}
+  .admin-share-box p{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+    color:var(--blue);margin-bottom:6px;}
+  .admin-share-row{display:flex;gap:6px;align-items:stretch;}
+  .admin-url{flex:1;background:#fff;border:1px solid var(--border);border-radius:7px;
+    padding:7px 10px;font-size:11px;color:var(--blue);word-break:break-all;font-weight:600;line-height:1.4;}
+  .admin-btns{display:flex;flex-wrap:wrap;gap:7px;}
+  .ab{padding:7px 13px;border-radius:8px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;
+    cursor:pointer;transition:all .15s;border:1.5px solid var(--border);background:var(--surface);color:var(--text-m);}
+  .ab:hover{background:var(--card);border-color:var(--text-l);}
+  .ab.red{color:var(--blush);}
+  .ab.red:hover{background:var(--blush-bg);border-color:var(--blush-l);}
+  .export-box{display:none;margin-top:11px;background:var(--surface);border:1px solid var(--border);
+    border-radius:10px;padding:13px;font-size:13px;color:var(--text-m);white-space:pre-wrap;line-height:1.9;}
+  .export-box.show{display:block;}
+
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+    background:var(--text);color:#fff;padding:11px 22px;border-radius:99px;font-size:13px;
+    font-weight:600;box-shadow:0 6px 24px rgba(0,0,0,.15);
+    transition:transform .3s cubic-bezier(.4,0,.2,1);z-index:300;white-space:nowrap;}
+  .toast.show{transform:translateX(-50%) translateY(0);}
+  .toast.ok{background:var(--sage);}
+  .toast.err{background:var(--blush);}
+</style>
 </head>
 <body>
 
-<div id="loadingOverlay">CARICAMENTO IN CORSO...</div>
-
-<div class="container">
-    <div class="header">
-        <h1 id="eventTitle">TORNEO BRIDGE</h1>
-        <p id="eventDate">Caricamento dati...</p>
-    </div>
-
-    <div id="adminArea" class="admin-panel hidden">
-        <div style="font-size: 12px; color: var(--accent); margin-bottom: 10px; font-weight: 800;">⚙️ AREA AMMINISTRATORE</div>
-        <input type="text" id="newTitle" placeholder="Titolo Torneo">
-        <input type="text" id="newDate" placeholder="Data (es: 20 Marzo ore 21)">
-        <input type="number" id="newMax" placeholder="Max Coppie">
-        <button class="btn btn-main" onclick="createNewTorneo()">➕ CREA NUOVO TORNEO</button>
-        <div id="activeControls" class="hidden">
-            <hr style="margin: 15px 0; opacity: 0.2;">
-            <button class="btn btn-wa" onclick="shareWA()">🟢 INVITA SU WHATSAPP</button>
-            <button class="btn btn-reset" onclick="resetCurrentTorneo()">🗑️ RESET ISCRITTI</button>
-        </div>
-    </div>
-
-    <div class="card" id="regForm">
-        <input type="text" id="playerName" placeholder="Nome della Coppia">
-        <button class="btn btn-main" onclick="addPair()">CONFERMA ISCRIZIONE</button>
-    </div>
-
-    <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h3 style="font-size: 16px;">ISCRITTI</h3>
-            <span id="counter" style="font-weight: 800; color: var(--primary);">0/0</span>
-        </div>
-        <div id="playerList"></div>
-    </div>
+<!-- LOADING -->
+<div class="overlay" id="loadingOverlay">
+  <div class="modal" style="text-align:center;padding:48px 32px">
+    <div class="spinner-lg"></div>
+    <p style="color:var(--text-m);font-size:14px">Caricamento…</p>
+  </div>
 </div>
 
+<!-- SETUP ADMIN -->
+<div class="overlay hidden" id="setupOverlay">
+  <div class="modal">
+    <div class="modal-suits">
+      <div class="ms" style="background:var(--slate-bg);color:var(--slate)">♠</div>
+      <div class="ms" style="background:var(--blush-bg);color:var(--blush)">♥</div>
+      <div class="ms" style="background:var(--sand-bg);color:var(--sand)">♦</div>
+      <div class="ms" style="background:var(--sage-bg);color:var(--sage)">♣</div>
+    </div>
+    <h2>Nuovo torneo</h2>
+    <p class="sub">Configura i dettagli del prossimo duplicato</p>
+    <div class="field">
+      <label>Nome evento</label>
+      <input type="text" id="sTitle" value="Duplicato di Bridge" oninput="cs()">
+    </div>
+    <div class="row2">
+      <div class="field"><label>Data</label><input type="date" id="sDate" oninput="cs()"></div>
+      <div class="field"><label>Orario</label><input type="time" id="sTime" value="21:00"></div>
+    </div>
+    <div class="field">
+      <label>Luogo</label>
+      <input type="text" id="sPlace" placeholder="es. Circolo Bridge, Via Roma 12">
+    </div>
+    <div class="field">
+      <label>Numero coppie (max)</label>
+      <input type="number" id="sMaxCoppie" value="4" min="1" max="16">
+    </div>
+    <button class="btn btn-blue" id="setupBtn" onclick="launch()" disabled>Crea torneo →</button>
+  </div>
+</div>
+
+<!-- LINK CREATO -->
+<div class="overlay hidden" id="shareOverlay">
+  <div class="modal" style="text-align:center">
+    <div style="font-size:40px;margin-bottom:10px">🎉</div>
+    <h2 style="margin-bottom:4px">Torneo creato!</h2>
+    <p class="sub">Manda questo link su WhatsApp</p>
+    <div class="share-box">
+      <p>📤 Link partecipanti</p>
+      <div class="share-row">
+        <div class="share-url" id="shareUrlTxt">—</div>
+        <button class="copy-btn" id="copyBtn1" onclick="doCopy('copyBtn1')">📋 Copia</button>
+      </div>
+    </div>
+    <button class="btn btn-blue" style="margin-top:6px" onclick="hide('shareOverlay')">Vai alla lista →</button>
+  </div>
+</div>
+
+<!-- RESET -->
+<div class="overlay hidden" id="resetOverlay">
+  <div class="modal" style="text-align:center">
+    <div style="font-size:34px;margin-bottom:10px">⚠️</div>
+    <h2 style="font-size:20px;margin-bottom:4px">Cancellare le iscrizioni?</h2>
+    <p class="sub">Non è reversibile.</p>
+    <button class="btn btn-danger" onclick="doReset()">Sì, azzera</button>
+    <button class="btn btn-ghost" style="margin-top:6px" onclick="hide('resetOverlay')">Annulla</button>
+  </div>
+</div>
+
+<!-- NUOVO TORNEO -->
+<div class="overlay hidden" id="newOverlay">
+  <div class="modal" style="text-align:center">
+    <div style="font-size:34px;margin-bottom:10px">🃏</div>
+    <h2 style="font-size:20px;margin-bottom:4px">Nuovo torneo?</h2>
+    <p class="sub">Il torneo attuale verrà archiviato e ne verrà creato uno nuovo.</p>
+    <button class="btn btn-blue" onclick="nuovoTorneo()">Configura nuovo torneo</button>
+    <button class="btn btn-ghost" style="margin-top:6px" onclick="hide('newOverlay')">Annulla</button>
+  </div>
+</div>
+
+<!-- CONFERMA CANCELLAZIONE UTENTE -->
+<div class="overlay hidden" id="selfDelOverlay">
+  <div class="modal" style="text-align:center">
+    <div style="font-size:34px;margin-bottom:10px">🗑️</div>
+    <h2 style="font-size:20px;margin-bottom:4px">Cancellare la tua iscrizione?</h2>
+    <p class="sub" id="selfDelMsg">Questa azione non è reversibile.</p>
+    <button class="btn btn-danger" onclick="confirmSelfDel()">Sì, cancellami</button>
+    <button class="btn btn-ghost" style="margin-top:6px" onclick="hide('selfDelOverlay')">Annulla</button>
+  </div>
+</div>
+
+<!-- ACCESSO NEGATO -->
+<div class="overlay hidden" id="deniedOverlay">
+  <div class="modal" style="text-align:center">
+    <div style="font-size:48px;margin-bottom:12px">🔒</div>
+    <h2 style="margin-bottom:6px">Accesso non autorizzato</h2>
+    <p class="sub">Usa il link ricevuto dall'organizzatore.</p>
+  </div>
+</div>
+
+<!-- MAIN -->
+<header>
+  <div class="suits-row">
+    <div class="suit" style="background:var(--slate-bg);color:var(--slate)">♠</div>
+    <div class="suit" style="background:var(--blush-bg);color:var(--blush)">♥</div>
+    <div class="suit" style="background:var(--sand-bg);color:var(--sand)">♦</div>
+    <div class="suit" style="background:var(--sage-bg);color:var(--sage)">♣</div>
+  </div>
+  <h1><small>Torneo</small><span id="hTitle">Duplicato di Bridge</span></h1>
+  <div class="event-meta">
+    <span class="meta-pill" id="mDate" style="display:none">📅 <span id="mDateTxt"></span></span>
+    <span class="meta-pill" id="mTime" style="display:none">🕐 <span id="mTimeTxt"></span></span>
+    <span class="meta-pill" id="mPlace" style="display:none">📍 <span id="mPlaceTxt"></span></span>
+  </div>
+</header>
+
+<div class="container">
+  <div style="text-align:center">
+    <div class="sync-pill">
+      <div class="sync-dot" id="syncDot"></div>
+      <span id="syncLbl">Connessione…</span>
+    </div>
+  </div>
+
+  <!-- ADMIN BAR -->
+  <div class="admin-bar" id="adminBar" style="display:none">
+    <div class="admin-title">⚙️ Pannello organizzatore</div>
+    <div class="admin-share-box">
+      <p>📤 Link per i partecipanti</p>
+      <div class="admin-share-row">
+        <div class="admin-url" id="adminUrlTxt">—</div>
+        <button class="copy-btn" id="copyBtn2" onclick="doCopy('copyBtn2')" style="font-size:11px;padding:7px 11px">📋 Copia</button>
+      </div>
+    </div>
+    <div class="admin-btns">
+      <button class="ab" onclick="toggleExport()">📋 Esporta lista</button>
+      <button class="ab" onclick="show('newOverlay')">🔄 Nuovo torneo</button>
+      <button class="ab red" onclick="show('resetOverlay')">↺ Reset iscrizioni</button>
+    </div>
+    <div class="export-box" id="exportBox"></div>
+  </div>
+
+  <!-- STATO -->
+  <div class="status-bar">
+    <div class="status-row">
+      <span class="status-label">Stato iscrizioni</span>
+      <div class="status-chips">
+        <span class="chip chip-blue">👫 <span id="cCount">0</span> / <span id="cMax">4</span> coppie</span>
+        <span class="chip chip-blush">🙋 <span id="sCount">0</span> singoli</span>
+      </div>
+    </div>
+    <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
+    <div class="status-note" id="statusNote">Le iscrizioni sono aperte</div>
+  </div>
+
+  <!-- LISTE -->
+  <div class="lists-grid">
+    <div class="list-card">
+      <div class="lch">
+        <div class="list-icon" style="background:var(--blue-bg)">👫</div>
+        <h3>Coppie</h3>
+        <span class="badge" id="cBadge">0</span>
+      </div>
+      <div id="cList"></div>
+    </div>
+    <div class="list-card">
+      <div class="lch">
+        <div class="list-icon" style="background:var(--blush-bg)">🙋</div>
+        <h3>Singoli</h3>
+        <span class="badge s" id="sBadge">0</span>
+      </div>
+      <div id="sList"></div>
+    </div>
+  </div>
+
+  <!-- BANNER PIENO -->
+  <div class="info-banner blue hidden" id="fullBanner">
+    🃏 Le 4 coppie sono complete — ci vediamo al tavolo!
+  </div>
+
+  <!-- BANNER GIA' ISCRITTO -->
+  <div class="info-banner blush hidden" id="alreadyBanner">
+    ✓ Sei già iscritto/a — la tua iscrizione è evidenziata in blu nella lista.
+    Per cancellarti usa il pulsante accanto al tuo nome.
+  </div>
+
+  <!-- FORM -->
+  <div class="form-card" id="formCard">
+    <h2>Iscriviti al torneo</h2>
+    <div class="type-toggle">
+      <button class="tog active coppia" id="btnC" onclick="setType('coppia')"><span class="icon">👫</span>Coppia</button>
+      <button class="tog singolo" id="btnS" onclick="setType('singolo')"><span class="icon">🙋</span>Singolo/a</button>
+    </div>
+    <div class="ig">
+      <label id="lbl1">Nome giocatore 1</label>
+      <input type="text" id="n1" placeholder="es. Mario Rossi" autocomplete="off" oninput="cf()">
+    </div>
+    <div class="ig" id="g2">
+      <label>Nome giocatore 2</label>
+      <input type="text" id="n2" placeholder="es. Giulia Bianchi" autocomplete="off" oninput="cf()">
+    </div>
+    <button class="submit-btn" id="subBtn" onclick="register()" disabled>Conferma iscrizione</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
 <script>
-const JBASE = 'https://api.jsonbin.io/v3/b';
+// ── CREDENZIALI ───────────────────────────────────────────────
 const MASTER_KEY = '$2a$10$1qayBZ95jStLXaEK5ql6pOfEsL2lCZI9Zo6tu7.u0kko0C.DNEv16';
 const ACCESS_KEY = '$2a$10$meqPLCGo48xs4Me.qNnIUefaCedxyQ0Bgpi7OcAcBqG.aNPILz6lC';
-const ADMIN_LIST = { 'GK020160': 'ANACROB', 'Kial$$44': 'ASSISTENTE' };
-const PW_USER = 'anacrob';
+const PW_ADMIN   = 'GK020160';
+const ADMIN_LIST = ['GK020160', 'Kial$$44'];
+const PW_USER    = 'anacrob';
+const LKEY       = 'bridge-bin-v6';
+const MYCODE_KEY = 'bridge-mycode-v6';
+const JBASE      = 'https://api.jsonbin.io/v3/b';
 
-let isAdmin = false;
-let currentBin = '';
-let torneoData = { meta: { title: "Nessun Torneo", date: "-", max: 16 }, players: [] };
+// ── STATE ─────────────────────────────────────────────────────
+let MAX_COPPIE=4, BIN_ID=null, regs=[], curType='coppia';
+let lastHash='', isAdmin=false, myCode=null;
+let userShareUrl='';
+let pendingSelfDelIdx = null;
 
-const params = new URLSearchParams(window.location.search);
-const adminPw = params.get('admin');
-const userPw = params.get('user');
-const binParam = params.get('bin');
+// Codice personale: generato una volta, salvato nel browser
+function getMyCode() {
+  let c = localStorage.getItem(MYCODE_KEY);
+  if (!c) { c = Math.random().toString(36).slice(2,10); localStorage.setItem(MYCODE_KEY,c); }
+  return c;
+}
 
-async function init() {
-    // Forza la scomparsa del caricamento dopo 3 secondi in ogni caso
-    setTimeout(() => document.getElementById('loadingOverlay').classList.add('hidden'), 3000);
+// ── INIT ──────────────────────────────────────────────────────
+(async () => {
+  const p = new URLSearchParams(location.search);
+  const adminPw = p.get('admin');
+  const userPw  = p.get('user');
+  const binParam = p.get('bin');
 
-    // Identificazione
-    if (adminPw && ADMIN_LIST[adminPw]) {
-        isAdmin = true;
-        document.getElementById('adminArea').classList.remove('hidden');
-    } else if (userPw !== PW_USER) {
-        document.getElementById('loadingOverlay').innerHTML = "Accesso negato.";
-        return;
+if (ADMIN_LIST.includes(adminPw)) {
+    isAdmin = true;
+} else if (userPw === PW_USER) {
+    isAdmin = false;
+} else {
+    hide('loadingOverlay'); 
+    show('deniedOverlay'); 
+    return;
+}  
+  myCode = getMyCode();
+
+  if (isAdmin) {
+    document.getElementById('adminBar').style.display = 'block';
+    try { BIN_ID = localStorage.getItem(LKEY) || null; } catch(e){}
+    if (!BIN_ID) {
+      hide('loadingOverlay'); prefillDate(); show('setupOverlay'); return;
     }
+  } else {
+    if (!binParam) { hide('loadingOverlay'); show('deniedOverlay'); return; }
+    BIN_ID = binParam;
+  }
 
-    currentBin = binParam || (isAdmin ? localStorage.getItem('last_bin_bridge_' + adminPw) : null);
+  buildUserUrl();
+  if (isAdmin) updateAdminUrl();
 
-    if (currentBin && currentBin !== "null") {
-        await loadTorneo();
-    } else {
-        document.getElementById('loadingOverlay').classList.add('hidden');
-    }
+  await loadAll();
+  hide('loadingOverlay');
+  setSS('live','Aggiornato in tempo reale');
+  setInterval(poll, 30000);
+})();
+
+// ── URL ───────────────────────────────────────────────────────
+function buildUserUrl() {
+  const base = location.origin + location.pathname.replace(/\/+$/,'');
+  userShareUrl = `${base}?user=${PW_USER}&bin=${BIN_ID}`;
+}
+function updateAdminUrl() {
+  document.getElementById('adminUrlTxt').textContent = userShareUrl;
 }
 
-async function loadTorneo() {
-    try {
-        const res = await fetch(`${JBASE}/${currentBin}/latest`, {
-            headers: { 'X-Master-Key': MASTER_KEY, 'X-Access-Key': ACCESS_KEY }
-        });
-        const data = await res.json();
-        torneoData = data.record;
-        if (isAdmin) document.getElementById('activeControls').classList.remove('hidden');
-        render();
-    } catch (e) { console.error("Errore fetch"); }
-    document.getElementById('loadingOverlay').classList.add('hidden');
+// ── SETUP ─────────────────────────────────────────────────────
+function prefillDate() {
+  const d = new Date();
+  document.getElementById('sDate').value =
+    `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  cs();
+}
+function cs() {
+  document.getElementById('setupBtn').disabled =
+    !document.getElementById('sTitle').value.trim() ||
+    !document.getElementById('sDate').value;
 }
 
-async function createNewTorneo() {
-    const t = document.getElementById('newTitle').value || "TORNEO";
-    const d = document.getElementById('newDate').value || "-";
-    const m = document.getElementById('newMax').value || 16;
-    
-    try {
-        const res = await fetch(JBASE, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
-            body: JSON.stringify({ meta: { title: t, date: d, max: m }, players: [] })
-        });
-        const data = await res.json();
-        const nid = data.metadata.id;
-        if (isAdmin) localStorage.setItem('last_bin_bridge_' + adminPw, nid);
-        window.location.href = `?admin=${adminPw}&bin=${nid}`;
-    } catch (e) { alert("Errore creazione"); }
-}
-
-function render() {
-    document.getElementById('eventTitle').innerText = torneoData.meta.title;
-    document.getElementById('eventDate').innerText = torneoData.meta.date;
-    document.getElementById('counter').innerText = `${torneoData.players.length}/${torneoData.meta.max}`;
-    const list = document.getElementById('playerList');
-    list.innerHTML = '';
-    torneoData.players.forEach((p, i) => {
-        list.innerHTML += `<div class="player-row"><span class="player-num">${i+1}</span><span class="player-name">${p}</span>${isAdmin ? `<button class="del-btn" onclick="deletePair(${i})">×</button>` : ''}</div>`;
+async function launch() {
+  const btn = document.getElementById('setupBtn');
+  btn.disabled=true; btn.innerHTML='<span class="spinner-sm"></span>Creazione…';
+  MAX_COPPIE = parseInt(document.getElementById('sMaxCoppie').value)||4;
+  const meta = {
+    title:     document.getElementById('sTitle').value.trim(),
+    date:      document.getElementById('sDate').value,
+    time:      document.getElementById('sTime').value,
+    place:     document.getElementById('sPlace').value.trim(),
+    maxCoppie: MAX_COPPIE
+  };
+  try {
+    const r = await fetch(JBASE, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Master-Key':MASTER_KEY,
+               'X-Bin-Name':'bridge-duplicato','X-Bin-Private':'false'},
+      body: JSON.stringify({registrations:[],meta})
     });
-}
-
-async function addPair() {
-    const name = document.getElementById('playerName').value.trim();
-    if (!name || torneoData.players.length >= torneoData.meta.max) return;
-    torneoData.players.push(name);
-    document.getElementById('playerName').value = '';
-    await updateDB();
-}
-
-async function deletePair(i) {
-    if (confirm("Rimuovere?")) { torneoData.players.splice(i, 1); await updateDB(); }
-}
-
-async function resetCurrentTorneo() {
-    if (confirm("Azzerare tutto?")) { torneoData.players = []; await updateDB(); }
-}
-
-async function updateDB() {
-    await fetch(`${JBASE}/${currentBin}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
-        body: JSON.stringify(torneoData)
-    });
+    if (!r.ok) throw new Error((await r.json().catch(()=>({}))).message||`HTTP ${r.status}`);
+    const data = await r.json();
+    BIN_ID = data.metadata.id;
+    try { localStorage.setItem(LKEY,BIN_ID); } catch(e){}
+    buildUserUrl(); updateAdminUrl(); applyMeta(meta);
+    hide('setupOverlay');
+    document.getElementById('shareUrlTxt').textContent = userShareUrl;
+    show('shareOverlay');
     render();
+    setSS('live','Aggiornato in tempo reale');
+    setInterval(poll,30000);
+  } catch(e) {
+    btn.disabled=false; btn.textContent='Crea torneo →';
+    toast('⚠️ '+e.message,'err');
+  }
 }
 
-function shareWA() {
-    const link = `${window.location.origin}${window.location.pathname}?user=${PW_USER}&bin=${currentBin}`;
-    const text = `*${torneoData.meta.title}*\n📅 ${torneoData.meta.date}\n\nIscriviti qui:\n${link}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
+function nuovoTorneo() {
+  hide('newOverlay'); BIN_ID=null; regs=[];
+  try { localStorage.removeItem(LKEY); } catch(e){}
+  prefillDate(); show('setupOverlay');
 }
 
-init();
+// ── COPIA ─────────────────────────────────────────────────────
+function doCopy(btnId) {
+  const copy = () => {
+    const b = document.getElementById(btnId);
+    const orig = b.textContent;
+    b.textContent='✓ Copiato!'; b.classList.add('ok');
+    setTimeout(()=>{ b.textContent=orig; b.classList.remove('ok'); },2000);
+  };
+  navigator.clipboard.writeText(userShareUrl).then(copy).catch(()=>{
+    const ta=document.createElement('textarea');
+    ta.value=userShareUrl; ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta); copy();
+  });
+}
+
+// ── JSONBIN ───────────────────────────────────────────────────
+async function readBin() {
+  const r = await fetch(`${JBASE}/${BIN_ID}/latest`,{headers:{'X-Master-Key':MASTER_KEY}});
+  if (!r.ok) throw new Error('Lettura fallita');
+  return (await r.json()).record;
+}
+async function writeBin(rec) {
+  const h = {'Content-Type':'application/json'};
+  if (isAdmin) h['X-Master-Key']=MASTER_KEY; else h['X-Access-Key']=ACCESS_KEY;
+  const r = await fetch(`${JBASE}/${BIN_ID}`,{method:'PUT',headers:h,body:JSON.stringify(rec)});
+  if (!r.ok) { const e=await r.json().catch(()=>({})); throw new Error(e.message||`Errore ${r.status}`); }
+  return await r.json();
+}
+async function loadAll() {
+  try {
+    const rec = await readBin();
+    regs = rec.registrations||[];
+    lastHash = JSON.stringify(regs);
+    if (rec.meta) { MAX_COPPIE=rec.meta.maxCoppie||4; applyMeta(rec.meta); }
+    render();
+  } catch(e) { setSS('err','Errore connessione'); }
+}
+async function poll() {
+  try {
+    const rec = await readBin();
+    const h = JSON.stringify(rec.registrations);
+    if (h!==lastHash) { lastHash=h; regs=rec.registrations||[]; render(); }
+    setSS('live','Aggiornato in tempo reale');
+  } catch(e) { setSS('err','Errore connessione'); }
+}
+
+// ── META ──────────────────────────────────────────────────────
+function applyMeta(m) {
+  if (m.title) { document.getElementById('hTitle').textContent=m.title; document.title=m.title; }
+  if (m.date) {
+    const [y,mo,d]=m.date.split('-');
+    document.getElementById('mDateTxt').textContent=
+      new Date(+y,+mo-1,+d).toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'});
+    document.getElementById('mDate').style.display='inline-flex';
+  }
+  if (m.time) { document.getElementById('mTimeTxt').textContent=m.time; document.getElementById('mTime').style.display='inline-flex'; }
+  if (m.place) { document.getElementById('mPlaceTxt').textContent=m.place; document.getElementById('mPlace').style.display='inline-flex'; }
+}
+
+// ── LOGICA ISCRIZIONI ─────────────────────────────────────────
+function countCoppie() { return regs.filter(r=>r.type==='coppia').length; }
+function countSingoli() { return regs.filter(r=>r.type==='singolo').length; }
+function isFull() { return countCoppie() >= MAX_COPPIE; }
+
+// Cerca se questo dispositivo ha già un'iscrizione
+function myRegistration() {
+  return regs.find(r => r.code === myCode) || null;
+}
+
+// ── FORM ──────────────────────────────────────────────────────
+function setType(t) {
+  curType=t;
+  document.getElementById('btnC').className='tog coppia'+(t==='coppia'?' active':'');
+  document.getElementById('btnS').className='tog singolo'+(t==='singolo'?' active':'');
+  document.getElementById('g2').style.display=t==='coppia'?'block':'none';
+  document.getElementById('lbl1').textContent=t==='coppia'?'Nome giocatore 1':'Il tuo nome';
+  document.getElementById('n2').value=''; cf();
+}
+function cf() {
+  const n1=document.getElementById('n1').value.trim();
+  const n2=document.getElementById('n2').value.trim();
+  const ok=n1.length>0&&(curType==='singolo'||n2.length>0);
+  const alreadyIn = !isAdmin && !!myRegistration();
+  document.getElementById('subBtn').disabled = !ok || isFull() || !BIN_ID || alreadyIn;
+}
+
+async function register() {
+  if (!isAdmin && myRegistration()) { toast("Sei già iscritto/a!","err"); return; }
+  const n1=document.getElementById('n1').value.trim();
+  const n2=document.getElementById('n2').value.trim();
+  if (!n1||!BIN_ID) return;
+  if (isFull()) { toast('⚠️ Le coppie sono al completo!','err'); return; }
+
+  const btn=document.getElementById('subBtn');
+  btn.disabled=true; btn.innerHTML='<span class="spinner-sm"></span>Salvataggio…';
+
+  try {
+    const rec=await readBin();
+    rec.registrations.push({
+      type:curType,
+      names:curType==='coppia'?[n1,n2]:[n1],
+      code:myCode,  // codice segreto del dispositivo
+      ts:Date.now()
+    });
+    await writeBin(rec);
+    regs=rec.registrations; lastHash=JSON.stringify(regs);
+    document.getElementById('n1').value=''; document.getElementById('n2').value='';
+    btn.textContent='Conferma iscrizione';
+    render(); toast('✓ Iscrizione confermata!','ok');
+  } catch(e) { toast('⚠️ '+e.message,'err'); btn.textContent='Conferma iscrizione'; cf(); }
+}
+
+// Cancellazione propria (utente)
+function askSelfDel(idx) {
+  const r = regs[idx];
+  if (!r) return;
+  pendingSelfDelIdx = idx;
+  const msg = r.type==='coppia'
+    ? `Stai per cancellare la coppia: ${r.names[0]} & ${r.names[1]}`
+    : `Stai per cancellarti come singolo: ${r.names[0]}`;
+  document.getElementById('selfDelMsg').textContent = msg;
+  show('selfDelOverlay');
+}
+
+async function confirmSelfDel() {
+  hide('selfDelOverlay');
+  if (pendingSelfDelIdx === null || !BIN_ID) return;
+  try {
+    const rec=await readBin();
+    rec.registrations.splice(pendingSelfDelIdx,1);
+    await writeBin(rec);
+    regs=rec.registrations; lastHash=JSON.stringify(regs);
+    pendingSelfDelIdx=null;
+    render(); toast('Iscrizione cancellata','');
+  } catch(e) { toast('⚠️ Errore','err'); }
+}
+
+// Cancellazione admin
+async function adminDel(idx) {
+  if (!BIN_ID||!isAdmin) return;
+  try {
+    const rec=await readBin();
+    rec.registrations.splice(idx,1);
+    await writeBin(rec);
+    regs=rec.registrations; lastHash=JSON.stringify(regs);
+    render(); toast('Rimosso','');
+  } catch(e) { toast('⚠️ Errore','err'); }
+}
+
+async function doReset() {
+  hide('resetOverlay');
+  try {
+    const rec=await readBin(); rec.registrations=[];
+    await writeBin(rec); regs=[]; lastHash='[]'; render(); toast('Lista azzerata','');
+  } catch(e) { toast('⚠️ Errore','err'); }
+}
+
+// ── RENDER ────────────────────────────────────────────────────
+function render() {
+  const cp = regs.filter(r=>r.type==='coppia');
+  const sg = regs.filter(r=>r.type==='singolo');
+  const full = isFull();
+  const myReg = myRegistration();
+
+  // Stato barra
+  document.getElementById('cCount').textContent = cp.length;
+  document.getElementById('sCount').textContent = sg.length;
+  document.getElementById('cMax').textContent   = MAX_COPPIE;
+  document.getElementById('cBadge').textContent = cp.length;
+  document.getElementById('sBadge').textContent = sg.length;
+  document.getElementById('progFill').style.width = Math.round((cp.length/MAX_COPPIE)*100)+'%';
+
+  // Note stato
+  const note = document.getElementById('statusNote');
+  if (full) note.textContent = '✓ Tutte le coppie sono iscritte';
+  else note.textContent = `Iscrizioni aperte — mancano ${MAX_COPPIE-cp.length} ${MAX_COPPIE-cp.length===1?'coppia':'coppie'}`;
+
+  // Banner pieno
+  document.getElementById('fullBanner').classList.toggle('hidden', !full);
+
+  // Banner già iscritto
+  document.getElementById('alreadyBanner').classList.toggle('hidden', !myReg || isAdmin);
+
+  // Form
+  document.getElementById('formCard').style.display = (full && !myReg) ? 'none' : 'block';
+  cf();
+
+  // Lista coppie
+  const cl=document.getElementById('cList'); cl.innerHTML='';
+  cp.forEach((r,i) => {
+    const origIdx=regs.indexOf(r);
+    const isMine = !isAdmin && r.code===myCode;
+    const d=document.createElement('div');
+    d.className='reg-item'+(isMine?' mine':'');
+    let delBtn='';
+    if (isAdmin) delBtn=`<button class="del-btn admin-del" onclick="adminDel(${origIdx})" title="Rimuovi (admin)">×</button>`;
+    else if (isMine) delBtn=`<button class="del-btn mine-del" onclick="askSelfDel(${origIdx})">Cancella</button>`;
+    d.innerHTML=`<span class="reg-num">${i+1}</span>
+      <span class="reg-name">${esc(r.names[0])}<br><small>${esc(r.names[1]||'')}</small></span>${delBtn}`;
+    cl.appendChild(d);
+  });
+  for (let s=cp.length; s<MAX_COPPIE; s++) {
+    const d=document.createElement('div'); d.className='empty-slot'; d.textContent='posto libero'; cl.appendChild(d);
+  }
+
+  // Lista singoli
+  const sl=document.getElementById('sList'); sl.innerHTML='';
+  if (sg.length===0) {
+    const d=document.createElement('div'); d.className='empty-slot'; d.textContent='nessun singolo'; sl.appendChild(d);
+  }
+  sg.forEach((r,i) => {
+    const origIdx=regs.indexOf(r);
+    const isMine = !isAdmin && r.code===myCode;
+    const d=document.createElement('div');
+    d.className='reg-item'+(isMine?' mine':'');
+    let delBtn='';
+    if (isAdmin) delBtn=`<button class="del-btn admin-del" onclick="adminDel(${origIdx})" title="Rimuovi (admin)">×</button>`;
+    else if (isMine) delBtn=`<button class="del-btn mine-del" onclick="askSelfDel(${origIdx})">Cancella</button>`;
+    d.innerHTML=`<span class="reg-num">${i+1}</span>
+      <span class="reg-name">${esc(r.names[0])}</span>${delBtn}`;
+    sl.appendChild(d);
+  });
+}
+
+function toggleExport() {
+  const b=document.getElementById('exportBox'); b.classList.toggle('show');
+  if (b.classList.contains('show')) {
+    const cp=regs.filter(r=>r.type==='coppia'), sg=regs.filter(r=>r.type==='singolo');
+    let t='🃏 DUPLICATO DI BRIDGE\n\n👫 COPPIE:\n';
+    cp.length?cp.forEach((r,i)=>t+=`  ${i+1}. ${r.names[0]} & ${r.names[1]}\n`):(t+='  (nessuna)\n');
+    t+='\n🙋 SINGOLI:\n';
+    sg.length?sg.forEach((r,i)=>t+=`  ${i+1}. ${r.names[0]}\n`):(t+='  (nessuno)\n');
+    t+=`\nCoppie: ${cp.length}/${MAX_COPPIE} — Singoli: ${sg.length}`;
+    b.textContent=t;
+  }
+}
+
+// ── UTILS ─────────────────────────────────────────────────────
+function show(id){document.getElementById(id).classList.remove('hidden');}
+function hide(id){document.getElementById(id).classList.add('hidden');}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function setSS(s,l){
+  document.getElementById('syncDot').className='sync-dot '+s;
+  document.getElementById('syncLbl').textContent=l;
+}
+function toast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast show '+type;
+  setTimeout(()=>t.className='toast',2800);
+}
+
+setType('coppia');
 </script>
 </body>
 </html>
