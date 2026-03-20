@@ -86,7 +86,6 @@
   .sync-dot.err{background:var(--blush);}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
-  /* barra stato coppie */
   .status-bar{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
     padding:16px 20px;margin-bottom:14px;}
   .status-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;}
@@ -150,12 +149,10 @@
   .submit-btn:hover:not(:disabled){background:var(--blue-l);transform:translateY(-1px);box-shadow:0 4px 20px rgba(33,69,160,.25);}
   .submit-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
 
-  /* avvisi */
   .info-banner{border-radius:var(--r);padding:14px 16px;margin-bottom:14px;font-size:13px;font-weight:600;line-height:1.5;}
   .info-banner.blue{background:var(--blue-bg);border:1.5px solid var(--blue);color:var(--blue);}
   .info-banner.blush{background:var(--blush-bg);border:1.5px solid var(--blush);color:var(--blush);}
 
-  /* admin */
   .admin-bar{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
     padding:16px 18px;margin-bottom:14px;}
   .admin-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
@@ -188,7 +185,6 @@
 </head>
 <body>
 
-<!-- LOADING -->
 <div class="overlay" id="loadingOverlay">
   <div class="modal" style="text-align:center;padding:48px 32px">
     <div class="spinner-lg"></div>
@@ -196,7 +192,6 @@
   </div>
 </div>
 
-<!-- SETUP ADMIN -->
 <div class="overlay hidden" id="setupOverlay">
   <div class="modal">
     <div class="modal-suits">
@@ -227,7 +222,6 @@
   </div>
 </div>
 
-<!-- LINK CREATO -->
 <div class="overlay hidden" id="shareOverlay">
   <div class="modal" style="text-align:center">
     <div style="font-size:40px;margin-bottom:10px">🎉</div>
@@ -244,7 +238,6 @@
   </div>
 </div>
 
-<!-- RESET -->
 <div class="overlay hidden" id="resetOverlay">
   <div class="modal" style="text-align:center">
     <div style="font-size:34px;margin-bottom:10px">⚠️</div>
@@ -255,7 +248,6 @@
   </div>
 </div>
 
-<!-- NUOVO TORNEO -->
 <div class="overlay hidden" id="newOverlay">
   <div class="modal" style="text-align:center">
     <div style="font-size:34px;margin-bottom:10px">🃏</div>
@@ -266,7 +258,6 @@
   </div>
 </div>
 
-<!-- CONFERMA CANCELLAZIONE UTENTE -->
 <div class="overlay hidden" id="selfDelOverlay">
   <div class="modal" style="text-align:center">
     <div style="font-size:34px;margin-bottom:10px">🗑️</div>
@@ -277,7 +268,6 @@
   </div>
 </div>
 
-<!-- ACCESSO NEGATO -->
 <div class="overlay hidden" id="deniedOverlay">
   <div class="modal" style="text-align:center">
     <div style="font-size:48px;margin-bottom:12px">🔒</div>
@@ -286,7 +276,6 @@
   </div>
 </div>
 
-<!-- MAIN -->
 <header>
   <div class="suits-row">
     <div class="suit" style="background:var(--slate-bg);color:var(--slate)">♠</div>
@@ -310,7 +299,6 @@
     </div>
   </div>
 
-  <!-- ADMIN BAR -->
   <div class="admin-bar" id="adminBar" style="display:none">
     <div class="admin-title">⚙️ Pannello organizzatore</div>
     <div class="admin-share-box">
@@ -321,6 +309,7 @@
       </div>
     </div>
     <div class="admin-btns">
+      <button class="ab" onclick="shareWA()" style="background:#25d366; color:white; border:none;">🟢 WhatsApp</button>
       <button class="ab" onclick="toggleExport()">📋 Esporta lista</button>
       <button class="ab" onclick="show('newOverlay')">🔄 Nuovo torneo</button>
       <button class="ab red" onclick="show('resetOverlay')">↺ Reset iscrizioni</button>
@@ -328,7 +317,6 @@
     <div class="export-box" id="exportBox"></div>
   </div>
 
-  <!-- STATO -->
   <div class="status-bar">
     <div class="status-row">
       <span class="status-label">Stato iscrizioni</span>
@@ -341,7 +329,6 @@
     <div class="status-note" id="statusNote">Le iscrizioni sono aperte</div>
   </div>
 
-  <!-- LISTE -->
   <div class="lists-grid">
     <div class="list-card">
       <div class="lch">
@@ -361,18 +348,15 @@
     </div>
   </div>
 
-  <!-- BANNER PIENO -->
   <div class="info-banner blue hidden" id="fullBanner">
     🃏 Le 4 coppie sono complete — ci vediamo al tavolo!
   </div>
 
-  <!-- BANNER GIA' ISCRITTO -->
   <div class="info-banner blush hidden" id="alreadyBanner">
     ✓ Sei già iscritto/a — la tua iscrizione è evidenziata in blu nella lista.
     Per cancellarti usa il pulsante accanto al tuo nome.
   </div>
 
-  <!-- FORM -->
   <div class="form-card" id="formCard">
     <h2>Iscriviti al torneo</h2>
     <div class="type-toggle">
@@ -397,10 +381,9 @@
 // ── CREDENZIALI ───────────────────────────────────────────────
 const MASTER_KEY = '$2a$10$1qayBZ95jStLXaEK5ql6pOfEsL2lCZI9Zo6tu7.u0kko0C.DNEv16';
 const ACCESS_KEY = '$2a$10$meqPLCGo48xs4Me.qNnIUefaCedxyQ0Bgpi7OcAcBqG.aNPILz6lC';
-const PW_ADMIN   = 'GK020160';
-const ADMIN_LIST = ['GK020160', 'Kial$$44'];
+const ADMIN_LIST = { 'GK020160': 'ANACROB', 'Kial$$44': 'ASSISTENTE' };
 const PW_USER    = 'anacrob';
-const LKEY       = 'bridge-bin-v6';
+const LKEY_PREFIX = 'bridge-bin-v6-';
 const MYCODE_KEY = 'bridge-mycode-v6';
 const JBASE      = 'https://api.jsonbin.io/v3/b';
 
@@ -410,7 +393,6 @@ let lastHash='', isAdmin=false, myCode=null;
 let userShareUrl='';
 let pendingSelfDelIdx = null;
 
-// Codice personale: generato una volta, salvato nel browser
 function getMyCode() {
   let c = localStorage.getItem(MYCODE_KEY);
   if (!c) { c = Math.random().toString(36).slice(2,10); localStorage.setItem(MYCODE_KEY,c); }
@@ -424,30 +406,25 @@ function getMyCode() {
   const userPw  = p.get('user');
   const binParam = p.get('bin');
 
-if (ADMIN_LIST.includes(adminPw)) {
+  if (adminPw && ADMIN_LIST[adminPw]) {
     isAdmin = true;
-} else if (userPw === PW_USER) {
-    isAdmin = false;
-} else {
-    hide('loadingOverlay'); 
-    show('deniedOverlay'); 
-    return;
-}  
-  myCode = getMyCode();
-
-  if (isAdmin) {
     document.getElementById('adminBar').style.display = 'block';
-    try { BIN_ID = localStorage.getItem(LKEY) || null; } catch(e){}
-    if (!BIN_ID) {
-      hide('loadingOverlay'); prefillDate(); show('setupOverlay'); return;
-    }
-  } else {
+    try { BIN_ID = binParam || localStorage.getItem(LKEY_PREFIX + adminPw) || null; } catch(e){}
+    if (!BIN_ID) { hide('loadingOverlay'); prefillDate(); show('setupOverlay'); return; }
+  } else if (userPw === PW_USER) {
+    isAdmin = false;
     if (!binParam) { hide('loadingOverlay'); show('deniedOverlay'); return; }
     BIN_ID = binParam;
+  } else {
+    hide('loadingOverlay'); show('deniedOverlay'); return;
   }
 
+  myCode = getMyCode();
   buildUserUrl();
-  if (isAdmin) updateAdminUrl();
+  if (isAdmin) {
+    updateAdminUrl();
+    localStorage.setItem(LKEY_PREFIX + adminPw, BIN_ID);
+  }
 
   await loadAll();
   hide('loadingOverlay');
@@ -455,7 +432,6 @@ if (ADMIN_LIST.includes(adminPw)) {
   setInterval(poll, 30000);
 })();
 
-// ── URL ───────────────────────────────────────────────────────
 function buildUserUrl() {
   const base = location.origin + location.pathname.replace(/\/+$/,'');
   userShareUrl = `${base}?user=${PW_USER}&bin=${BIN_ID}`;
@@ -464,7 +440,6 @@ function updateAdminUrl() {
   document.getElementById('adminUrlTxt').textContent = userShareUrl;
 }
 
-// ── SETUP ─────────────────────────────────────────────────────
 function prefillDate() {
   const d = new Date();
   document.getElementById('sDate').value =
@@ -498,14 +473,15 @@ async function launch() {
     if (!r.ok) throw new Error((await r.json().catch(()=>({}))).message||`HTTP ${r.status}`);
     const data = await r.json();
     BIN_ID = data.metadata.id;
-    try { localStorage.setItem(LKEY,BIN_ID); } catch(e){}
+    const p = new URLSearchParams(location.search);
+    const adminPw = p.get('admin');
+    if (isAdmin) localStorage.setItem(LKEY_PREFIX + adminPw, BIN_ID);
     buildUserUrl(); updateAdminUrl(); applyMeta(meta);
     hide('setupOverlay');
     document.getElementById('shareUrlTxt').textContent = userShareUrl;
     show('shareOverlay');
     render();
     setSS('live','Aggiornato in tempo reale');
-    setInterval(poll,30000);
   } catch(e) {
     btn.disabled=false; btn.textContent='Crea torneo →';
     toast('⚠️ '+e.message,'err');
@@ -514,11 +490,12 @@ async function launch() {
 
 function nuovoTorneo() {
   hide('newOverlay'); BIN_ID=null; regs=[];
-  try { localStorage.removeItem(LKEY); } catch(e){}
+  const p = new URLSearchParams(location.search);
+  const adminPw = p.get('admin');
+  try { localStorage.removeItem(LKEY_PREFIX + adminPw); } catch(e){}
   prefillDate(); show('setupOverlay');
 }
 
-// ── COPIA ─────────────────────────────────────────────────────
 function doCopy(btnId) {
   const copy = () => {
     const b = document.getElementById(btnId);
@@ -534,7 +511,11 @@ function doCopy(btnId) {
   });
 }
 
-// ── JSONBIN ───────────────────────────────────────────────────
+function shareWA() {
+  const text = `🃏 *${document.getElementById('hTitle').textContent}*\n📅 ${document.getElementById('mDateTxt').textContent}\n\nPer iscrivervi cliccate qui:\n${userShareUrl}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
+}
+
 async function readBin() {
   const r = await fetch(`${JBASE}/${BIN_ID}/latest`,{headers:{'X-Master-Key':MASTER_KEY}});
   if (!r.ok) throw new Error('Lettura fallita');
@@ -565,7 +546,6 @@ async function poll() {
   } catch(e) { setSS('err','Errore connessione'); }
 }
 
-// ── META ──────────────────────────────────────────────────────
 function applyMeta(m) {
   if (m.title) { document.getElementById('hTitle').textContent=m.title; document.title=m.title; }
   if (m.date) {
@@ -578,17 +558,14 @@ function applyMeta(m) {
   if (m.place) { document.getElementById('mPlaceTxt').textContent=m.place; document.getElementById('mPlace').style.display='inline-flex'; }
 }
 
-// ── LOGICA ISCRIZIONI ─────────────────────────────────────────
 function countCoppie() { return regs.filter(r=>r.type==='coppia').length; }
 function countSingoli() { return regs.filter(r=>r.type==='singolo').length; }
 function isFull() { return countCoppie() >= MAX_COPPIE; }
 
-// Cerca se questo dispositivo ha già un'iscrizione
 function myRegistration() {
   return regs.find(r => r.code === myCode) || null;
 }
 
-// ── FORM ──────────────────────────────────────────────────────
 function setType(t) {
   curType=t;
   document.getElementById('btnC').className='tog coppia'+(t==='coppia'?' active':'');
@@ -620,7 +597,7 @@ async function register() {
     rec.registrations.push({
       type:curType,
       names:curType==='coppia'?[n1,n2]:[n1],
-      code:myCode,  // codice segreto del dispositivo
+      code:myCode,
       ts:Date.now()
     });
     await writeBin(rec);
@@ -631,7 +608,6 @@ async function register() {
   } catch(e) { toast('⚠️ '+e.message,'err'); btn.textContent='Conferma iscrizione'; cf(); }
 }
 
-// Cancellazione propria (utente)
 function askSelfDel(idx) {
   const r = regs[idx];
   if (!r) return;
@@ -656,7 +632,6 @@ async function confirmSelfDel() {
   } catch(e) { toast('⚠️ Errore','err'); }
 }
 
-// Cancellazione admin
 async function adminDel(idx) {
   if (!BIN_ID||!isAdmin) return;
   try {
@@ -676,14 +651,12 @@ async function doReset() {
   } catch(e) { toast('⚠️ Errore','err'); }
 }
 
-// ── RENDER ────────────────────────────────────────────────────
 function render() {
   const cp = regs.filter(r=>r.type==='coppia');
   const sg = regs.filter(r=>r.type==='singolo');
   const full = isFull();
   const myReg = myRegistration();
 
-  // Stato barra
   document.getElementById('cCount').textContent = cp.length;
   document.getElementById('sCount').textContent = sg.length;
   document.getElementById('cMax').textContent   = MAX_COPPIE;
@@ -691,22 +664,16 @@ function render() {
   document.getElementById('sBadge').textContent = sg.length;
   document.getElementById('progFill').style.width = Math.round((cp.length/MAX_COPPIE)*100)+'%';
 
-  // Note stato
   const note = document.getElementById('statusNote');
   if (full) note.textContent = '✓ Tutte le coppie sono iscritte';
   else note.textContent = `Iscrizioni aperte — mancano ${MAX_COPPIE-cp.length} ${MAX_COPPIE-cp.length===1?'coppia':'coppie'}`;
 
-  // Banner pieno
   document.getElementById('fullBanner').classList.toggle('hidden', !full);
-
-  // Banner già iscritto
   document.getElementById('alreadyBanner').classList.toggle('hidden', !myReg || isAdmin);
 
-  // Form
   document.getElementById('formCard').style.display = (full && !myReg) ? 'none' : 'block';
   cf();
 
-  // Lista coppie
   const cl=document.getElementById('cList'); cl.innerHTML='';
   cp.forEach((r,i) => {
     const origIdx=regs.indexOf(r);
@@ -724,7 +691,6 @@ function render() {
     const d=document.createElement('div'); d.className='empty-slot'; d.textContent='posto libero'; cl.appendChild(d);
   }
 
-  // Lista singoli
   const sl=document.getElementById('sList'); sl.innerHTML='';
   if (sg.length===0) {
     const d=document.createElement('div'); d.className='empty-slot'; d.textContent='nessun singolo'; sl.appendChild(d);
@@ -756,7 +722,6 @@ function toggleExport() {
   }
 }
 
-// ── UTILS ─────────────────────────────────────────────────────
 function show(id){document.getElementById(id).classList.remove('hidden');}
 function hide(id){document.getElementById(id).classList.add('hidden');}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
