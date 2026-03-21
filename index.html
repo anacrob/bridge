@@ -462,7 +462,14 @@ function getMyCode() {
   if (isAdmin) {
     document.getElementById('adminBar').style.display = 'block';
     adminPwCurrent = adminPw;             // salva pw admin corrente per buildAdminUrl
-    try { BIN_ID = localStorage.getItem(LKEY) || null; } catch(e){}
+    if (binParam) {
+      // Link admin con bin= → accesso diretto al torneo su qualsiasi dispositivo
+      BIN_ID = binParam;
+      try { localStorage.setItem(LKEY, BIN_ID); } catch(e){}
+    } else {
+      // Nessun bin nell'URL → cerca nel localStorage (primo avvio o stesso dispositivo)
+      try { BIN_ID = localStorage.getItem(LKEY) || null; } catch(e){}
+    }
     if (!BIN_ID) {
       hide('loadingOverlay'); prefillDate(); show('setupOverlay'); return;
     }
@@ -487,7 +494,7 @@ function buildUserUrl() {
 }
 function buildAdminUrl() {
   const base = location.origin + location.pathname.replace(/\/+$/,'');
-  adminShareUrl = `${base}?admin=${encodeURIComponent(adminPwCurrent)}`;
+  adminShareUrl = `${base}?admin=${encodeURIComponent(adminPwCurrent)}&bin=${BIN_ID}`;
 }
 function updateAdminUrls() {
   document.getElementById('adminUrlTxt').textContent  = userShareUrl;
