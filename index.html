@@ -177,6 +177,25 @@
     border-radius:10px;padding:13px;font-size:13px;color:var(--text-m);white-space:pre-wrap;line-height:1.9;}
   .export-box.show{display:block;}
 
+  /* storico tornei */
+  .storico-box{margin-top:10px;display:none;}
+  .storico-box.show{display:block;}
+  .storico-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
+    color:var(--text-l);margin-bottom:6px;}
+  .storico-item{display:flex;align-items:center;gap:6px;padding:7px 10px;
+    background:var(--surface);border:1px solid var(--border);border-radius:8px;
+    margin-bottom:5px;font-size:11px;}
+  .storico-label{font-weight:700;color:var(--blue);min-width:110px;flex-shrink:0;}
+  .storico-url{flex:1;color:var(--text-m);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .storico-copy{flex-shrink:0;padding:4px 10px;background:var(--blue);color:#fff;border:none;
+    border-radius:6px;font-family:'Nunito',sans-serif;font-size:10px;font-weight:700;
+    cursor:pointer;transition:all .15s;}
+  .storico-copy:hover{background:var(--blue-l);}
+  .storico-copy.ok{background:var(--sage);}
+  .storico-del{flex-shrink:0;background:none;border:none;color:var(--text-l);cursor:pointer;
+    font-size:14px;padding:0 3px;transition:color .15s;}
+  .storico-del:hover{color:var(--blush);}
+
   .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
     background:var(--text);color:#fff;padding:11px 22px;border-radius:99px;font-size:13px;
     font-weight:600;box-shadow:0 6px 24px rgba(0,0,0,.15);
@@ -223,7 +242,7 @@
       <label>Numero coppie (max)</label>
       <input type="number" id="sMaxCoppie" value="4" min="1" max="16">
     </div>
-    <button class="btn btn-blue" id="setupBtn" onclick="launch()" disabled>Crea torneo →</button>
+    <button class="btn btn-blue" id="setupBtn" onclick="launch()" disabled>Crea nuovo torneo →</button>
   </div>
 </div>
 
@@ -336,8 +355,13 @@
     </div>
     <div class="admin-btns">
       <button class="ab" onclick="toggleExport()">📋 Esporta lista</button>
+      <button class="ab" onclick="toggleStorico()">📅 Tornei creati</button>
       <button class="ab" onclick="show('newOverlay')">🔄 Nuovo torneo</button>
       <button class="ab red" onclick="show('resetOverlay')">↺ Reset iscrizioni</button>
+    </div>
+    <div class="storico-box" id="storicoBox">
+      <div class="storico-title">📅 Storico tornei</div>
+      <div id="storicoList"></div>
     </div>
     <div class="export-box" id="exportBox"></div>
     <button id="copyExportBtn" class="copy-btn hidden" onclick="copyExport()"
@@ -537,6 +561,7 @@ async function launch() {
     BIN_ID = data.metadata.id;
     try { localStorage.setItem(LKEY,BIN_ID); } catch(e){}
     buildUserUrl(); buildAdminUrl(); updateAdminUrls(); applyMeta(meta);
+    saveStorico(meta);   // salva nel registro tornei
     hide('setupOverlay');
     document.getElementById('shareUrlTxt').textContent  = userShareUrl;
     document.getElementById('shareAdminTxt').textContent = adminShareUrl;
@@ -815,6 +840,79 @@ function toggleExport() {
   } else {
     btn.classList.add('hidden');
   }
+}
+
+// ── STORICO TORNEI ────────────────────────────────────────────
+function storicoKey() { return 'bridge-storico-' + adminPwCurrent; }
+
+function saveStorico(meta) {
+  try {
+    const key = storicoKey();
+    const list = JSON.parse(localStorage.getItem(key)||'[]');
+    // Rimuovi eventuale duplicato dello stesso bin
+    const idx = list.findIndex(t=>t.bin===BIN_ID);
+    if (idx>=0) list.splice(idx,1);
+    const label = (meta.title||'Torneo') + (meta.date ? ' — ' +
+      new Date(meta.date+'T12:00').toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short'}) : '');
+    list.unshift({ bin:BIN_ID, label, userUrl:userShareUrl, adminUrl:adminShareUrl, ts:Date.now() });
+    if (list.length>20) list.length=20;  // max 20 tornei
+    localStorage.setItem(key, JSON.stringify(list));
+  } catch(e){}
+}
+
+function loadStorico() {
+  try {
+    const key = storicoKey();
+    return JSON.parse(localStorage.getItem(key)||'[]');
+  } catch(e){ return []; }
+}
+
+function deleteStorico(bin) {
+  try {
+    const key = storicoKey();
+    const list = loadStorico().filter(t=>t.bin!==bin);
+    localStorage.setItem(key, JSON.stringify(list));
+    renderStorico();
+  } catch(e){}
+}
+
+function copyStoricoUrl(url, btnId) {
+  navigator.clipboard.writeText(url).catch(()=>{
+    const ta=document.createElement('textarea');
+    ta.value=url; ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+  });
+  const b=document.getElementById(btnId);
+  if(b){ b.textContent='✓'; b.classList.add('ok'); setTimeout(()=>{b.textContent='📋';b.classList.remove('ok');},2000); }
+}
+
+function renderStorico() {
+  const list = loadStorico();
+  const el = document.getElementById('storicoList');
+  if (!el) return;
+  el.innerHTML='';
+  if (list.length===0) {
+    el.innerHTML='<div style="font-size:12px;color:var(--text-l);padding:6px 0">Nessun torneo salvato.</div>';
+    return;
+  }
+  list.forEach((t,i)=>{
+    const row = document.createElement('div'); row.className='storico-item';
+    const isActive = t.bin===BIN_ID;
+    row.innerHTML=`
+      <span class="storico-label">${esc(t.label)}${isActive?' <span style="color:var(--sage);font-size:10px">● attivo</span>':''}</span>
+      <span class="storico-url" title="${esc(t.userUrl)}">${esc(t.userUrl)}</span>
+      <button class="storico-copy" id="scb${i}u" onclick="copyStoricoUrl('${t.userUrl}','scb${i}u')" title="Copia link partecipanti">📋</button>
+      <button class="storico-copy" id="scb${i}a" onclick="copyStoricoUrl('${t.adminUrl}','scb${i}a')" title="Copia link admin" style="background:var(--sage)">🔑</button>
+      <button class="storico-del" onclick="deleteStorico('${t.bin}')" title="Elimina dal registro">×</button>`;
+    el.appendChild(row);
+  });
+}
+
+function toggleStorico() {
+  const box = document.getElementById('storicoBox');
+  box.classList.toggle('show');
+  if (box.classList.contains('show')) renderStorico();
 }
 
 // ── UTILS ─────────────────────────────────────────────────────
