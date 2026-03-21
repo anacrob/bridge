@@ -242,7 +242,7 @@
       <label>Numero coppie (max)</label>
       <input type="number" id="sMaxCoppie" value="4" min="1" max="16">
     </div>
-    <button class="btn btn-blue" id="setupBtn" onclick="launch()" disabled>Crea nuovo torneo →</button>
+    <button class="btn btn-blue" id="setupBtn" onclick="launch()" disabled>Crea torneo →</button>
   </div>
 </div>
 
@@ -829,13 +829,51 @@ function toggleExport() {
   const btn = document.getElementById('copyExportBtn');
   b.classList.toggle('show');
   if (b.classList.contains('show')) {
-    const cp=regs.filter(r=>r.type==='coppia'), sg=regs.filter(r=>r.type==='singolo');
-    let t='🃏 DUPLICATO DI BRIDGE\n\n👫 COPPIE:\n';
-    cp.length?cp.forEach((r,i)=>t+=`  ${i+1}. ${r.names[0]} & ${r.names[1]}\n`):(t+='  (nessuna)\n');
-    t+='\n🙋 SINGOLI:\n';
-    sg.length?sg.forEach((r,i)=>t+=`  ${i+1}. ${r.names[0]}\n`):(t+='  (nessuno)\n');
-    t+=`\nCoppie: ${cp.length}/${MAX_COPPIE} — Singoli: ${sg.length}`;
-    b.textContent=t;
+    const cp = regs.filter(r=>r.type==='coppia');
+    const sg = regs.filter(r=>r.type==='singolo');
+    const full = cp.length >= MAX_COPPIE;
+
+    // Titolo con data e orario del torneo
+    const dateEl = document.getElementById('mDateTxt');
+    const timeEl = document.getElementById('mTimeTxt');
+    const titleEl = document.getElementById('hTitle');
+    const datePart = dateEl && dateEl.textContent ? dateEl.textContent : '';
+    const timePart = timeEl && timeEl.textContent ? timeEl.textContent : '';
+    const titlePart = titleEl ? titleEl.textContent : 'DUPLICATO DI BRIDGE';
+
+    // Formato WhatsApp: *Duplicato Sabato ore 16.30*
+    const dayName = datePart ? datePart.split(' ')[0] : '';
+    const dayCapitalized = dayName ? dayName.charAt(0).toUpperCase() + dayName.slice(1) : '';
+    let header = `*${titlePart}`;
+    if (dayCapitalized) header += ` ${dayCapitalized}`;
+    if (timePart)       header += ` ore ${timePart}`;
+    header += `*`;
+
+    let t = header + '\n\n';
+
+    // Coppie
+    t += '👫 COPPIE:\n';
+    cp.length
+      ? cp.forEach((r,i) => t += `  ${i+1}. ${r.names[0]} & ${r.names[1]}\n`)
+      : (t += '  (nessuna)\n');
+
+    // Singoli — solo se non siamo al completo O se ci sono singoli presenti
+    if (!full || sg.length > 0) {
+      t += '\n🙋 SINGOLI:\n';
+      sg.length
+        ? sg.forEach((r,i) => t += `  ${i+1}. ${r.names[0]}\n`)
+        : (t += '  (nessuno)\n');
+    }
+
+    // Riepilogo finale
+    if (full) {
+      t += `\n✅ *Iscrizioni complete* — ${cp.length}/${MAX_COPPIE} coppie`;
+    } else {
+      t += `\nCoppie: ${cp.length}/${MAX_COPPIE}`;
+      if (sg.length > 0) t += ` — Singoli: ${sg.length}`;
+    }
+
+    b.textContent = t;
     btn.classList.remove('hidden');
   } else {
     btn.classList.add('hidden');
