@@ -224,7 +224,7 @@
       <div class="ms" style="background:var(--sand-bg);color:var(--sand)">♦</div>
       <div class="ms" style="background:var(--sage-bg);color:var(--sage)">♣</div>
     </div>
-    <h2>Nuovo torneo anacrob</h2>
+    <h2>Nuovo torneo BBO</h2>
     <p class="sub">Configura i dettagli del prossimo duplicato</p>
     <div class="field">
       <label>Nome evento</label>
@@ -625,6 +625,8 @@ async function readBin() {
   if (!r.ok) throw new Error('Lettura fallita');
   const data = await r.json();
   if (!data) throw new Error('Torneo non trovato');
+  // Firebase non memorizza gli array vuoti: garantisci sempre registrations
+  if (!Array.isArray(data.registrations)) data.registrations = [];
   return data;
 }
 async function writeBin(rec) {
