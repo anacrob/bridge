@@ -550,7 +550,7 @@ async function launch() {
   };
   try {
     // Crea un nuovo nodo Firebase con chiave univoca
-    const r = await fetch(`${FB_BASE}/tornei.json`, {
+    const r = await fetch(`${FB_BASE}.json`, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({registrations:[],meta})
@@ -615,7 +615,7 @@ function copyExport() {
 }
 
 // ── FIREBASE REST ─────────────────────────────────────────────
-function fbUrl() { return `${FB_BASE}/tornei/${BIN_ID}.json`; }
+function fbUrl() { return `${FB_BASE}/${BIN_ID}.json`; }
 async function readBin() {
   const r = await fetch(fbUrl());
   if (!r.ok) throw new Error('Lettura fallita');
