@@ -490,8 +490,13 @@ function getMyCode() {
       BIN_ID = binParam;
       try { localStorage.setItem(LKEY, BIN_ID); } catch(e){}
     } else {
-      // Nessun bin nell'URL → cerca nel localStorage (primo avvio o stesso dispositivo)
+      // Nessun bin nell'URL → cerca nel localStorage
       try { BIN_ID = localStorage.getItem(LKEY) || null; } catch(e){}
+    }
+    // Scarta eventuali BIN_ID vecchi di JSONBin (non iniziano con "-")
+    if (BIN_ID && !BIN_ID.startsWith('-')) {
+      try { localStorage.removeItem(LKEY); } catch(e){}
+      BIN_ID = null;
     }
     if (!BIN_ID) {
       hide('loadingOverlay'); prefillDate(); show('setupOverlay'); return;
