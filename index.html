@@ -436,9 +436,9 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ── CREDENZIALI ───────────────────────────────────────────────
-const MASTER_KEY = '$2a$10$1qayBZ95jStLXaEK5ql6pOfEsL2lCZI9Zo6tu7.u0kko0C.DNEv16';
-const ACCESS_KEY = '$2a$10$meqPLCGo48xs4Me.qNnIUefaCedxyQ0Bgpi7OcAcBqG.aNPILz6lC';
+// Firebase Realtime Database
+const FB_BASE = 'https://duplicato-anacrob-default-rtdb.europe-west1.firebaseio.com/bridge_app';
+
 // Due admin con storage separato — ognuno gestisce i propri tornei
 const ADMINS = {
   'GK020160': { lkey: 'bridge-bin-GK',   label: 'Admin 1' },
@@ -447,7 +447,6 @@ const ADMINS = {
 const PW_USER    = 'anacrob';
 const MYCODE_KEY = 'bridge-mycode-v6';
 let   LKEY       = null;   // impostato al login in base all'admin
-const JBASE      = 'https://api.jsonbin.io/v3/b';
 
 // ── STATE ─────────────────────────────────────────────────────
 let MAX_COPPIE=4, BIN_ID=null, regs=[], curType='coppia';
@@ -550,15 +549,15 @@ async function launch() {
     maxCoppie: MAX_COPPIE
   };
   try {
-    const r = await fetch(JBASE, {
+    // Crea un nuovo nodo Firebase con chiave univoca
+    const r = await fetch(`${FB_BASE}/tornei.json`, {
       method:'POST',
-      headers:{'Content-Type':'application/json','X-Master-Key':MASTER_KEY,
-               'X-Bin-Name':'bridge-duplicato','X-Bin-Private':'false'},
+      headers:{'Content-Type':'application/json'},
       body: JSON.stringify({registrations:[],meta})
     });
-    if (!r.ok) throw new Error((await r.json().catch(()=>({}))).message||`HTTP ${r.status}`);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const data = await r.json();
-    BIN_ID = data.metadata.id;
+    BIN_ID = data.name;   // Firebase ritorna {name: "-Nxxx..."} come ID
     try { localStorage.setItem(LKEY,BIN_ID); } catch(e){}
     buildUserUrl(); buildAdminUrl(); updateAdminUrls(); applyMeta(meta);
     saveStorico(meta);   // salva nel registro tornei
@@ -615,17 +614,22 @@ function copyExport() {
   });
 }
 
-// ── JSONBIN ───────────────────────────────────────────────────
+// ── FIREBASE REST ─────────────────────────────────────────────
+function fbUrl() { return `${FB_BASE}/tornei/${BIN_ID}.json`; }
 async function readBin() {
-  const r = await fetch(`${JBASE}/${BIN_ID}/latest`,{headers:{'X-Master-Key':MASTER_KEY}});
+  const r = await fetch(fbUrl());
   if (!r.ok) throw new Error('Lettura fallita');
-  return (await r.json()).record;
+  const data = await r.json();
+  if (!data) throw new Error('Torneo non trovato');
+  return data;
 }
 async function writeBin(rec) {
-  const h = {'Content-Type':'application/json'};
-  if (isAdmin) h['X-Master-Key']=MASTER_KEY; else h['X-Access-Key']=ACCESS_KEY;
-  const r = await fetch(`${JBASE}/${BIN_ID}`,{method:'PUT',headers:h,body:JSON.stringify(rec)});
-  if (!r.ok) { const e=await r.json().catch(()=>({})); throw new Error(e.message||`Errore ${r.status}`); }
+  const r = await fetch(fbUrl(), {
+    method:'PUT',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(rec)
+  });
+  if (!r.ok) throw new Error(`Errore ${r.status}`);
   return await r.json();
 }
 async function loadAll() {
